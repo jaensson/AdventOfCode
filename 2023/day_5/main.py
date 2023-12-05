@@ -7,17 +7,6 @@ class File(Enum):
     READ = "r"
 
 
-class Map(Enum):
-    SEED = 1
-    SEED_TO_SOIL = 2
-    SOIL_TO_FERTILIZER = 3
-    FERTIIZER_TO_WATER = 4
-    WATER_TO_LIGHT = 5
-    LIGHT_TO_TEMPERATURE = 6
-    TEMPERATURE_TO_HUMIDITY = 7
-    HUMIDITY_TO_LOCATION = 8
-
-
 def read_file(file: str) -> List[str]:
     file = open(file, File.READ.value, encoding="UTF-8")
     lines = file.read()
@@ -129,51 +118,16 @@ def part1(lines):
 
 
 def get_intervals(lines):
-    intervals_before_stage = []
-    for line in lines:
-        destination_range_sort = line[0]
-        source_range_start = line[1]
-        range_length = line[2]
+    # [start, end, destination]
+    intervals = [[line[1], line[1] + line[2] - 1, line[0]] for line in lines]
+    intervals.sort(key=lambda interval: interval[0])
 
-        start = source_range_start
-        end = source_range_start + range_length - 1
-
-        print(start, end)
-
-        intervals_length = len(intervals_before_stage)
-        for i in range(intervals_length):
-            interval_before_stage = intervals_before_stage[i]
-            min_value = interval_before_stage[0]
-            max_value = interval_before_stage[1]
-
-            if min_value < start < max_value:
-                max_value = max(max_value, end)
-            if min_value < end < max_value:
-                min_value = min(min_value, start)
-            if max_value < start or end < min_value:
-                intervals_before_stage.append([start, end])
-                break
-
-            interval_before_stage[0] = min_value
-            interval_before_stage[1] = max_value
-            intervals_before_stage[i] = interval_before_stage
-
-        if len(intervals_before_stage) == 0:
-            intervals_before_stage.append([start, end])
-
-    print(intervals_before_stage)
+    return intervals
 
 
-def part2(lines):
-    seeds = lines["seeds"]
-    print(seeds)
-
-    get_intervals(lines["seed-to-soil"])
-
+def seeds_interval(seeds):
     intervals = []
     for i in range(0, (len(seeds) - 1), 2):
-        # first_seed = seeds[i]
-        # second_seed = seeds[i + 1]
         start = seeds[i]
         end = start + seeds[i + 1] - 1
         length = len(intervals)
@@ -197,6 +151,20 @@ def part2(lines):
         if len(intervals) == 0:
             intervals.append([start, end])
 
+    intervals.sort(key=lambda interval: interval[1])
+
+    return intervals
+
+
+def part2(lines):
+    seed_interval = seeds_interval(lines["seeds"])
+
+    interval_map = {
+        key: get_intervals(lines[key])
+        for key in lines.keys()
+        if key != "seeds"
+    }
+
     operations = [
         "seed-to-soil",
         "soil-to-fertilizer",
@@ -207,78 +175,123 @@ def part2(lines):
         "humidity-to-location",
     ]
 
-    lowest = []
-    for interval in intervals:
-        operation = "seed-to-soil"
+    current_intervals = seed_interval
+    for operation in operations:
+        operation_intervals = interval_map[operation]
+        operation_interval_index = 0
+        current_interval_index = 0
 
-        current_value = interval[0]
+        new_intervals = []
 
-        for operation in operations:
-            for map in lines[operation]:
-                destination_range_start = map[0]
-                source_range_start = map[1]
-                range_length = map[2]
+        while current_interval_index < len(current_intervals):
+            operation_interval = operation_intervals[operation_interval_index]
+            current_interval = current_intervals[current_interval_index]
 
-                if (
-                    source_range_start
-                    <= current_value
-                    <= source_range_start + range_length
-                ):
-                    current_value = destination_range_start
+            if (
+                operation_interval[0] <= current_interval[0]
+                and current_interval[1] <= operation_interval[1]
+            ):
+                start = (
+                    current_interval[0]
+                    - operation_interval[0]
+                    + operation_interval[2]
+                )
+                end = (
+                    current_interval[1]
+                    - operation_interval[0]
+                    + operation_interval[2]
+                )
+                new_intervals.append([start, end])
+                current_interval_index += 1
 
-        lowest.append(current_value)
+            elif current_interval[0] > operation_interval[1]:
+                if operation_interval_index < len(operation_intervals) - 1:
+                    operation_interval_index += 1
+                else:
+                    new_intervals.append(
+                        [current_interval[0], current_interval[1]]
+                    )
+                    current_interval_index += 1
 
-    print(lowest)
+            elif (
+                operation_interval[0] <= current_interval[0]
+                and current_interval[0] <= operation_interval[1]
+                and operation_interval[1] < current_interval[1]
+            ):
+                start = (
+                    current_interval[0]
+                    - operation_interval[0]
+                    + operation_interval[2]
+                )
+                end = (
+                    operation_interval[1]
+                    - operation_interval[0]
+                    + operation_interval[2]
+                )
+                new_intervals.append([start, end])
+                current_intervals.insert(
+                    current_interval_index + 1,
+                    [operation_interval[1] + 1, current_interval[1]],
+                )
+                current_interval_index += 1
+
+            elif (
+                current_interval[0] < operation_interval[0]
+                and operation_interval[0] <= current_interval[1]
+                and current_interval[1] <= operation_interval[1]
+            ):
+                start = (
+                    operation_interval[0]
+                    - operation_interval[0]
+                    + operation_interval[2]
+                )
+                end = (
+                    current_interval[1]
+                    - operation_interval[0]
+                    + operation_interval[2]
+                )
+                new_intervals.append(
+                    [current_interval[0], operation_interval[0] - 1]
+                )
+                new_intervals.append([start, end])
+                current_interval_index += 1
+
+            elif (
+                current_interval[0] < operation_interval[0]
+                and operation_interval[1] < current_interval[1]
+            ):
+                new_intervals.append(
+                    [current_interval[0], operation_interval[0] - 1]
+                )
+                start = (
+                    operation_interval[0]
+                    - operation_interval[0]
+                    + operation_interval[2]
+                )
+                end = (
+                    operation_interval[1]
+                    - operation_interval[0]
+                    + operation_interval[2]
+                )
+                new_intervals.append([start, end])
+                current_intervals.insert(
+                    current_interval_index + 1,
+                    [operation_interval[1] + 1, current_interval[1]],
+                )
+                current_interval_index += 1
+
+            elif current_interval[1] < operation_interval[1]:
+                new_intervals.append(
+                    [current_interval[0], current_interval[1]]
+                )
+                current_interval_index += 1
+
+        new_intervals.sort(key=lambda interval: interval[0])
+        current_intervals = new_intervals
+
+    lowest = [interval[0] for interval in new_intervals]
 
     return min(lowest)
-
-    # lowest = []
-    # for interval in intervals:
-    #     # print(interval)
-    #     start = interval[0]
-    #     end = interval[1]
-
-    #     current_value = start
-    # print(current_value)
-
-    # for operation in operations:
-    #     for map in lines[operation]:
-    #         destination_range_start = map[0]
-    #         source_range_start = map[1]
-    #         range_length = map[2]
-
-    #         if (
-    #             source_range_start
-    #             <= current_value
-    #             <= source_range_start + range_length - 1
-    #         ):
-    #             current_value = destination_range_start + (
-    #                 current_value - source_range_start
-    #             )
-    #             break
-    # lowest.append(current_value)
-
-    # return min(lowest)
-
-    # for seed in range(start, end):
-    #     current_value = seed
-    #     for operation in operations:
-    #         for map in lines[operation]:
-    #             destination_range_start = map[0]
-    #             source_range_start = map[1]
-    #             range_length = map[2]
-
-    #             if (
-    #                 source_range_start
-    #                 <= current_value
-    #                 <= source_range_start + range_length - 1
-    #             ):
-    #                 current_value = destination_range_start + (
-    #                     current_value - source_range_start
-    #                 )
-    #                 break
-
-    #     lowest.append(current_value)
 
 
 if __name__ == "__main__":
