@@ -75,14 +75,21 @@ def part1(lines):
 def part2(lines):
     time = int("".join([str(race[0]) for race in lines]))
     distance = int("".join([str(race[1]) for race in lines]))
-    combinations = 0
 
-    for i in range(time + 1):
-        travled_distance = i * (time - i)
+    left = 0
+    right = time
+    low = time
+    while left <= right:
+        middle = left + (right - left) // 2
+
+        travled_distance = middle * (time - middle)
         if travled_distance > distance:
-            combinations += 1
+            right = middle - 1
+            low = min(low, middle)
+        else:
+            left = middle + 1
 
-    return combinations
+    return (time - low) - low + 1
 
 
 if __name__ == "__main__":
