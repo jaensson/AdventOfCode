@@ -52,34 +52,6 @@ def decode_input(lines):
     return output
 
 
-def convert_to_map(lines):
-    hash_map = dict()
-
-    maps = lines.items()
-
-    for map in maps:
-        key = map[0]
-        data = map[1]
-
-        if key == "seeds":
-            hash_map[key] = [int(data) for data in data]
-            continue
-
-        hash_map[key] = dict()
-
-        for row in data:
-            destination_range_start = int(row[0])
-            source_range_start = int(row[1])
-            range_length = int(row[2])
-
-            for i in range(range_length):
-                hash_map[key][source_range_start + i] = (
-                    destination_range_start + i
-                )
-
-    return hash_map
-
-
 def part1(lines):
     operations = [
         "seed-to-soil",
@@ -187,7 +159,20 @@ def part2(lines):
             operation_interval = operation_intervals[operation_interval_index]
             current_interval = current_intervals[current_interval_index]
 
-            if (
+            # start = min(current_interval[0], operation_interval[0])
+            # end = max(current_interval[1], operation_interval[1])
+
+            # operation low | operation high | current low | current high
+            if current_interval[0] > operation_interval[1]:
+                if operation_interval_index < len(operation_intervals) - 1:
+                    operation_interval_index += 1
+                    continue
+                else:
+                    new_intervals.append(
+                        [current_interval[0], current_interval[1]]
+                    )
+            # operation low | current low | current high | operation high
+            elif (
                 operation_interval[0] <= current_interval[0]
                 and current_interval[1] <= operation_interval[1]
             ):
@@ -202,22 +187,16 @@ def part2(lines):
                     + operation_interval[2]
                 )
                 new_intervals.append([start, end])
-                current_interval_index += 1
-
-            elif current_interval[0] > operation_interval[1]:
-                if operation_interval_index < len(operation_intervals) - 1:
-                    operation_interval_index += 1
-                else:
-                    new_intervals.append(
-                        [current_interval[0], current_interval[1]]
-                    )
-                    current_interval_index += 1
-
+            # operation low | current low | operation high | current high
             elif (
                 operation_interval[0] <= current_interval[0]
                 and current_interval[0] <= operation_interval[1]
                 and operation_interval[1] < current_interval[1]
             ):
+                current_intervals.insert(
+                    current_interval_index + 1,
+                    [operation_interval[1] + 1, current_interval[1]],
+                )
                 start = (
                     current_interval[0]
                     - operation_interval[0]
@@ -229,12 +208,7 @@ def part2(lines):
                     + operation_interval[2]
                 )
                 new_intervals.append([start, end])
-                current_intervals.insert(
-                    current_interval_index + 1,
-                    [operation_interval[1] + 1, current_interval[1]],
-                )
-                current_interval_index += 1
-
+            # current low | operation low | current high | operation high
             elif (
                 current_interval[0] < operation_interval[0]
                 and operation_interval[0] <= current_interval[1]
@@ -250,12 +224,8 @@ def part2(lines):
                     - operation_interval[0]
                     + operation_interval[2]
                 )
-                new_intervals.append(
-                    [current_interval[0], operation_interval[0] - 1]
-                )
                 new_intervals.append([start, end])
-                current_interval_index += 1
-
+            # current low | operation low | operation high | current high
             elif (
                 current_interval[0] < operation_interval[0]
                 and operation_interval[1] < current_interval[1]
@@ -278,13 +248,12 @@ def part2(lines):
                     current_interval_index + 1,
                     [operation_interval[1] + 1, current_interval[1]],
                 )
-                current_interval_index += 1
-
-            elif current_interval[1] < operation_interval[1]:
+            # current low | current high | operation low | operation high
+            elif current_interval[1] < operation_interval[0]:
                 new_intervals.append(
                     [current_interval[0], current_interval[1]]
                 )
-                current_interval_index += 1
+            current_interval_index += 1
 
         new_intervals.sort(key=lambda interval: interval[0])
         current_intervals = new_intervals
