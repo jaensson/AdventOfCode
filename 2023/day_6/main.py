@@ -1,6 +1,7 @@
 import os
 from typing import List
 from enum import Enum
+import math
 
 
 class File(Enum):
@@ -52,44 +53,29 @@ def decode_input(lines):
 
 
 def part1(lines):
-    combinations = []
+    combinations = 1
     for race in lines:
         time = race[0]
         distance = race[1]
 
-        distances = []
+        root = math.sqrt(time**2 - distance * 4)
+        low = int(-(time - root) // 2 * -1)
+        high = int((time + root) // 2)
 
-        for i in range(time + 1):
-            travled_distance = i * (time - i)
-            if travled_distance > distance:
-                distances.append(travled_distance)
-        combinations.append(len(distances))
+        combinations *= high - low + 1
 
-    total_combinations = 1
-    for combination in combinations:
-        total_combinations *= combination
-
-    return total_combinations
+    return combinations
 
 
 def part2(lines):
     time = int("".join([str(race[0]) for race in lines]))
     distance = int("".join([str(race[1]) for race in lines]))
 
-    left = 0
-    right = time
-    low = time
-    while left <= right:
-        middle = left + (right - left) // 2
+    root = math.sqrt(time**2 - distance * 4)
+    low = int(-(time - root) // 2 * -1)
+    high = int((time + root) // 2)
 
-        travled_distance = middle * (time - middle)
-        if travled_distance > distance:
-            right = middle - 1
-            low = min(low, middle)
-        else:
-            left = middle + 1
-
-    return (time - low) - low + 1
+    return high - low + 1
 
 
 if __name__ == "__main__":
