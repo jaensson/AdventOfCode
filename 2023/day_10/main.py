@@ -1,6 +1,7 @@
 import os
 from typing import List
 from enum import Enum
+import time
 
 
 class File(Enum):
@@ -32,46 +33,54 @@ def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
-    part1_result = part1(lines)
-    print(part1_result)
-    part2_result = part2(lines)
+    start_point = get_starting_point(lines)
+
+    # part1_result = part1(lines, start_point)
+    # print(part1_result)
+    part2_result = part2(lines, start_point)
     print(part2_result)
 
 
 def get_starting_point(lines):
+    NORTH = "north"
+    EAST = "east"
+    WEST = "west"
+    SOUTH = "south"
+    GROUND = "."
+    START = "S"
+
     TILES = {
-        "|": [Tiles.NORTH, Tiles.SOUTH],
-        "-": [Tiles.EAST, Tiles.WEST],
-        "L": [Tiles.NORTH, Tiles.EAST],
-        "J": [Tiles.NORTH, Tiles.WEST],
-        "7": [Tiles.SOUTH, Tiles.WEST],
-        "F": [Tiles.SOUTH, Tiles.EAST],
-        ".": [Tiles.GROUND],
-        "S": [Tiles.START],
+        "|": [NORTH, SOUTH],
+        "-": [EAST, WEST],
+        "L": [NORTH, EAST],
+        "J": [NORTH, WEST],
+        "7": [SOUTH, WEST],
+        "F": [SOUTH, EAST],
+        ".": [],
     }
 
     for y, line in enumerate(lines):
         for x, char in enumerate(line):
-            if char == Tiles.START.value:
+            if char == START:
                 connecting_pipes = []
                 north = TILES[lines[y - 1][x]] if y - 1 >= 0 else []
                 south = TILES[lines[y + 1][x]] if y + 1 < len(lines) else []
                 west = TILES[lines[y][x - 1]] if x - 1 >= 0 else []
                 east = TILES[lines[y][x + 1]] if x + 1 < len(lines[0]) else []
 
-                if Tiles.SOUTH in north:
-                    connecting_pipes.append(Tiles.NORTH)
-                if Tiles.WEST in east:
-                    connecting_pipes.append(Tiles.EAST)
-                if Tiles.EAST in west:
-                    connecting_pipes.append(Tiles.WEST)
-                if Tiles.NORTH in south:
-                    connecting_pipes.append(Tiles.SOUTH)
+                if SOUTH in north:
+                    connecting_pipes.append(NORTH)
+                if WEST in east:
+                    connecting_pipes.append(EAST)
+                if EAST in west:
+                    connecting_pipes.append(WEST)
+                if NORTH in south:
+                    connecting_pipes.append(SOUTH)
 
                 tiles = [
                     tile
                     for tile in TILES.items()
-                    if tile[0] != "." and tile[0] != "S"
+                    if tile[0] != GROUND and tile[0] != START
                 ]
 
                 for tile in tiles:
@@ -86,83 +95,128 @@ def get_starting_point(lines):
                 return (x, y)
 
 
-def get_connecting_pipes(lines, coordinates):
-    TILES = {
-        "|": [Tiles.NORTH, Tiles.SOUTH],
-        "-": [Tiles.EAST, Tiles.WEST],
-        "L": [Tiles.NORTH, Tiles.EAST],
-        "J": [Tiles.NORTH, Tiles.WEST],
-        "7": [Tiles.SOUTH, Tiles.WEST],
-        "F": [Tiles.SOUTH, Tiles.EAST],
-        ".": [Tiles.GROUND],
-        "S": [Tiles.START],
-    }
-    x, y = coordinates
-    current_connecting_pipes = TILES[lines[y][x]]
-    # print("nu är den", lines[y][x], current_connecting_pipes)
-
-    north = TILES[lines[y - 1][x]] if y - 1 >= 0 else []
-    south = TILES[lines[y + 1][x]] if y + 1 < len(lines) else []
-    west = TILES[lines[y][x - 1]] if x - 1 >= 0 else []
-    east = TILES[lines[y][x + 1]] if x + 1 < len(lines[0]) else []
-
-    connecting_pipes = []
-
-    if Tiles.SOUTH in north and Tiles.NORTH in current_connecting_pipes:
-        connecting_pipes.append(Tiles.NORTH)
-    if Tiles.WEST in east and Tiles.EAST in current_connecting_pipes:
-        connecting_pipes.append(Tiles.EAST)
-    if Tiles.EAST in west and Tiles.WEST in current_connecting_pipes:
-        connecting_pipes.append(Tiles.WEST)
-    if Tiles.NORTH in south and Tiles.SOUTH in current_connecting_pipes:
-        connecting_pipes.append(Tiles.SOUTH)
-
-    return connecting_pipes
-
-
-def part1(lines):
-    start_point = get_starting_point(lines)
+def part1(lines, start_point):
     path = [start_point]
 
-    current_pipe = -1
+    NORTH = "north"
+    EAST = "east"
+    WEST = "west"
+    SOUTH = "south"
+
+    TILES = {
+        "|": [NORTH, SOUTH],
+        "-": [EAST, WEST],
+        "L": [NORTH, EAST],
+        "J": [NORTH, WEST],
+        "7": [SOUTH, WEST],
+        "F": [SOUTH, EAST],
+    }
+
+    previous_walk = None
+    previous_coords = start_point
     while len([tile for tile in path if tile == start_point]) != 2:
-        current_pipe += 1
-        x, y = path[-1]
-        connecting_pipes = get_connecting_pipes(lines, (x, y))
-        # print(current_pipe, connecting_pipes)
-        connecting_pipes_coordinates = []
-        for connecting_pipe in connecting_pipes:
-            match connecting_pipe:
-                case Tiles.NORTH:
-                    connecting_pipes_coordinates.append((x, y - 1))
-                case Tiles.EAST:
-                    connecting_pipes_coordinates.append((x + 1, y))
-                case Tiles.WEST:
-                    connecting_pipes_coordinates.append((x - 1, y))
-                case Tiles.SOUTH:
-                    connecting_pipes_coordinates.append((x, y + 1))
+        x, y = previous_coords
+        directions = TILES[lines[y][x]][::]
 
-        if len(path) == 1:
-            path.append(connecting_pipes_coordinates[0])
-            continue
+        if previous_walk is not None:
+            if previous_walk == NORTH and SOUTH in directions:
+                directions.remove(SOUTH)
+            elif previous_walk == EAST and WEST in directions:
+                directions.remove(WEST)
+            elif previous_walk == WEST and EAST in directions:
+                directions.remove(EAST)
+            elif previous_walk == SOUTH and NORTH in directions:
+                directions.remove(NORTH)
 
-        connecting_pipes_coordinates = [
-            coordinate
-            for coordinate in connecting_pipes_coordinates
-            if coordinate != path[-2]
-        ]
-        if len(connecting_pipes_coordinates) == 0:
-            path.append(start_point)
-            continue
-        path.append(connecting_pipes_coordinates[0])
+        walk = directions[0]
+        if walk == NORTH:
+            coordinates = (x, y - 1)
+        elif walk == EAST:
+            coordinates = (x + 1, y)
+        elif walk == WEST:
+            coordinates = (x - 1, y)
+        elif walk == SOUTH:
+            coordinates = (x, y + 1)
 
-    # print("gingo", path)
+        previous_coords = coordinates
+        previous_walk = walk
+        path.append(coordinates)
 
     return len(path) // 2
 
 
-def part2(lines):
-    pass
+def part2(lines, start_point):
+    path = [start_point]
+
+    NORTH = "north"
+    EAST = "east"
+    WEST = "west"
+    SOUTH = "south"
+
+    TILES = {
+        "|": [NORTH, SOUTH],
+        "-": [EAST, WEST],
+        "L": [NORTH, EAST],
+        "J": [NORTH, WEST],
+        "7": [SOUTH, WEST],
+        "F": [SOUTH, EAST],
+    }
+
+    previous_walk = None
+    previous_coords = start_point
+    while len([tile for tile in path if tile == start_point]) != 2:
+        x, y = previous_coords
+        directions = TILES[lines[y][x]][::]
+
+        if previous_walk is not None:
+            if previous_walk == NORTH and SOUTH in directions:
+                directions.remove(SOUTH)
+            elif previous_walk == EAST and WEST in directions:
+                directions.remove(WEST)
+            elif previous_walk == WEST and EAST in directions:
+                directions.remove(EAST)
+            elif previous_walk == SOUTH and NORTH in directions:
+                directions.remove(NORTH)
+
+        walk = directions[0]
+        if walk == NORTH:
+            coordinates = (x, y - 1)
+        elif walk == EAST:
+            coordinates = (x + 1, y)
+        elif walk == WEST:
+            coordinates = (x - 1, y)
+        elif walk == SOUTH:
+            coordinates = (x, y + 1)
+
+        previous_coords = coordinates
+        previous_walk = walk
+        path.append(coordinates)
+
+    min_x = path[0][0]
+    max_x = min_x
+    min_y = path[0][1]
+    max_y = min_y
+
+    for coordinate in path:
+        x, y = coordinate
+        min_x = min(min_x, x)
+        max_x = max(max_x, x)
+        min_y = min(min_y, y)
+        max_y = max(max_y, y)
+
+    counter = 0
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            if (x, y) not in path:
+                print("O", end="")
+            else:
+                print(lines[y][x], end="")
+                counter += 1
+        print()
+
+    print(counter)
+
+    return counter
 
 
 if __name__ == "__main__":
