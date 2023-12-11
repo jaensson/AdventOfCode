@@ -38,7 +38,7 @@ def main():
     print(part2_result)
 
 
-def part1(lines):
+def get_space(lines):
     positions_x = set()
     positions_y = set()
 
@@ -58,6 +58,12 @@ def part1(lines):
     positions_y = {
         elem for elem in range(len(lines)) if elem not in positions_y
     }
+
+    return positions_x, positions_y, galaxies
+
+
+def part1(lines):
+    positions_x, positions_y, galaxies = get_space(lines)
 
     steps = []
 
@@ -87,25 +93,7 @@ def part1(lines):
 
 
 def part2(lines):
-    positions_x = set()
-    positions_y = set()
-
-    galaxies = []
-    galaxy_counter = 0
-    for y, line in enumerate(lines):
-        for x, char in enumerate(line):
-            if char == "#":
-                galaxy_counter += 1
-                positions_x.add(x)
-                positions_y.add(y)
-                galaxies.append((x, y))
-
-    positions_x = {
-        elem for elem in range(len(lines[0])) if elem not in positions_x
-    }
-    positions_y = {
-        elem for elem in range(len(lines)) if elem not in positions_y
-    }
+    positions_x, positions_y, galaxies = get_space(lines)
 
     steps = []
 
