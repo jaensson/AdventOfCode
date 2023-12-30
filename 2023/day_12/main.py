@@ -59,6 +59,70 @@ def part1(lines):
             sub_valids = get_combinations(
                 original, sub_length, arrangements, current_arrangement + 1
             )
+    def valid_combination(combination, arrangement):
+        import re
+
+        elems = re.split(r"[.]", combination)
+        elems = "".join([str(len(elem)) for elem in elems if elem != ""])
+
+        return elems == arrangement
+
+    def get_valid_combinations(start: str, arrangements: List[int]):
+        valid = 0
+        queue = [("", 0)]
+
+        arrangement = "".join(map(str, arrangements))
+
+        while len(queue) != 0:
+            current_string, current_arrangement = queue.pop(0)
+
+            if len(current_string) == len(start) and valid_combination(
+                current_string, arrangement
+            ):
+                valid += 1
+                continue
+
+            if (
+                current_arrangement < len(arrangements)
+                and "."
+                not in start[
+                    len(current_string) : len(current_string)
+                    + arrangements[current_arrangement]
+                ]
+                and (
+                    len(current_string) + arrangements[current_arrangement]
+                    >= len(start)
+                    or start[
+                        len(current_string) + arrangements[current_arrangement]
+                    ]
+                    != "#"
+                )
+            ):
+                left = current_string + "#" * arrangements[current_arrangement]
+                if len(left) < len(start):
+                    left += "."
+
+                queue.append((left, current_arrangement + 1))
+
+            offset = sum(arrangements[current_arrangement:])
+            if len(arrangements[current_arrangement:]) > 1:
+                offset += round(len(arrangements[current_arrangement:]) / 2)
+
+            if (
+                len(current_string) < len(start)
+                and start[len(current_string)] != "#"
+                and offset < len(start) - len(current_string)
+            ):
+                right = current_string + "."
+                queue.append((right, current_arrangement))
+
+        return valid
+
+    total = 0
+    for start, arrangement in lines:
+        total += get_valid_combinations(start, arrangement)
+
+    return total
 
             for sub_valid in sub_valids:
                 new_valid = (
