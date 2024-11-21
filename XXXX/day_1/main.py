@@ -1,8 +1,9 @@
-import sys, os
+import os
+import sys
+from lib.helpers import read_file
 
 CURRENT_DIRNAME = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(CURRENT_DIRNAME + "../../../")
-from lib.helpers import read_file
 
 
 def main():
