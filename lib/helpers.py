@@ -8,7 +8,7 @@ class File(Enum):
 
 def read_file(file: str) -> List[str]:
     file = open(file, File.READ.value, encoding="UTF-8")
-    lines = file.read()
+    lines = [line.strip() for line in file.readlines()]
     file.close()
 
     return lines
