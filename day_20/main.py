@@ -130,3 +130,29 @@ def part2(lines):
 if __name__ == "__main__":
     main()
 
+
+"""
+Använd en QUEUE
+
+Modules skickar pulsar antingen hög eller låg till alla dess destinationsmoduler.
+
+Flip-flop (%) 
+- En toggle mellan av/på, default av.
+- En inkommande hög puls ignoreras.
+- En inkommande låg puls flippar mellan av/på:
+    - Om den sätts på skickas en hög puls
+    - Om den stängs av skickas en låg puls
+
+Conjuction (&)
+- Sparar den senaste inkommande pulsen från alla dess inkommande moduler, default låg.
+- Uppdaterar signalen från den inkommande modulen.
+- Om alla inkommande moduler är höga skickas en låg puls annars en hög puls.
+- Agerar som en inverter om det endast finns en inkommande modul.
+
+Broadcaster
+- Skickar den inkommande pulsen till alla dess destinationsmoduler.
+
+Button
+- Skickar en låg puls till alla dess destinationsmoduler.
+
+"""

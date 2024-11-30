@@ -27,12 +27,12 @@ def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
+    start = time.time()
     part1_result = part1(lines)
     print(part1_result)
-    start = time.time()
-    # part2_result = part2(lines)
-    # print(part2_result)
+    part2_result = part2(lines)
     end = time.time()
+    print(part2_result)
     print(end - start)
 
 
@@ -111,6 +111,8 @@ def part2(lines):
 
     Träddiagram
     Varje position är eller inte. Går det sätt ut alla tillhörande samt en seperator.
+
+    Höger är som vänster men en prick framför
     """
 
     def valid_combination(combination, arrangement):
@@ -119,137 +121,79 @@ def part2(lines):
         elems = re.split(r"[.]", combination)
         elems = "".join([str(len(elem)) for elem in elems if elem != ""])
 
-        return elems == arrangement
+        print(combination)
 
-    def get_valid_combinations(start: str, arrangements: List[int]):
-        valid = 0
-        queue = [("", 0)]
+        return elems == "".join(map(str, arrangement))
 
-        arrangement = "".join(map(str, arrangements))
+    def get_valid_combinations(
+        spring: str,
+        arrangement: List[int],
+        current_spring: str = "",
+        current_arrangement: int = 0,
+        dp: dict = dict(),
+    ):
+        if len(spring) == len(current_spring) and valid_combination(
+            current_spring, arrangement
+        ):
+            dp["valid"] += 1
 
-        while len(queue) != 0:
-            current_string, current_arrangement = queue.pop(0)
-            # print("börjar med", current_string)
+        # print(spring, arrangement, current_spring, current_arrangement)
 
-            if len(current_string) == len(start) and valid_combination(
-                current_string, arrangement
-            ):
-                # print(current_string)
-                valid += 1
-                # valid_combination(current_string, arrangement)
-                continue
+        print(current_arrangement, len(current_spring))
 
-            if (
-                current_arrangement < len(arrangements)
-                and "."
-                not in start[
-                    len(current_string) : len(current_string)
-                    + arrangements[current_arrangement]
+        if (
+            current_arrangement < len(arrangement)
+            and "."
+            not in spring[
+                len(current_spring) : len(current_spring)
+                + arrangement[current_arrangement]
+            ]
+            and (
+                len(current_spring) + arrangement[current_arrangement]
+                >= len(spring)
+                or spring[
+                    len(current_spring) + arrangement[current_arrangement]
                 ]
-                and (
-                    len(current_string) + arrangements[current_arrangement]
-                    >= len(start)
-                    or start[
-                        len(current_string) + arrangements[current_arrangement]
-                    ]
-                    != "#"
-                )
-            ):
-                left = current_string + "#" * arrangements[current_arrangement]
-                if len(left) < len(start):
-                    left += "."
+                != "#"
+            )
+        ):
+            # print("skulle kunna lägga till en rackare")
+            # dp["ofan"] = "fungerar"
 
-                queue.append((left, current_arrangement + 1))
-                # print(f"left: {left}", end=" ")
+            left = current_spring + "#" * arrangement[current_arrangement]
+            if len(left) < len(spring):
+                left += "."
+            # print(left)
+            get_valid_combinations(
+                spring, arrangement, left, current_arrangement + 1, dp
+            )
 
-            offset = sum(arrangements[current_arrangement:])
-            if len(arrangements[current_arrangement:]) > 1:
-                offset += round(len(arrangements[current_arrangement:]) / 2)
+        offset = sum(arrangement[current_arrangement:])
+        if len(arrangement[current_arrangement:]) > 1:
+            offset += round(len(arrangement[current_arrangement:]) / 2)
 
-            # print(
-            #     offset,
-            #     len(start)
-            #     - len(current_string)
-            #     - [*start[len(current_string) :]].count("."),
-            # )
+        if (
+            len(current_spring) < len(spring)
+            and spring[len(current_spring)] != "#"
+            and offset < len(spring) - len(current_spring)
+        ):
+            right = current_spring + "."
+            get_valid_combinations(
+                spring, arrangement, right, current_arrangement, dp
+            )
+            # print("skulle kunna lägga till en prick")
 
-            if (
-                len(current_string) < len(start)
-                and start[len(current_string)] != "#"
-                and offset < len(start) - len(current_string)
-            ):
-                right = current_string + "."
-                queue.append((right, current_arrangement))
-                # print(f"right: {right}", end=" ")
+    springs = "?#?.??."
+    arrangement = [2, 1]
+    test_dict = {"valid": 0}
 
-            # print()
+    total = get_valid_combinations(springs, arrangement, dp=test_dict)
+    print(total, test_dict)
 
-        return valid
+    # for springs, arrangement in lines:
+    # get_valid_combinations(springs, arrangement)
 
-    # start = "??????"
-    # arrangements = [1, 2]
-    # start = "??????#?#?#??"
-    # arrangements = [2, 2, 6]
-
-    # result = get_valid_combinations(start, arrangements)
-    # print(result)
-
-    # print(lines)
-    # combinations = []
-    total = 0
-    for start, arrangement in lines:
-        # print(start, arrangement)
-        # combinations.append(get_valid_combinations(start, arrangement))
-        # start = "?".join([start for _ in range(5)])
-        # arrangement *= 5
-        # print(test, test2)
-
-        first = get_valid_combinations(start, arrangement)
-        second = get_valid_combinations(start + "?", arrangement)
-        third = get_valid_combinations("?" + start, arrangement)
-        fourth = get_valid_combinations("?" + start + "?", arrangement)
-
-        # total = first * testing**4
-
-        # print(testing, total)
-
-        # print(first, testing, total)
-
-        print(first, second, third, fourth)
-        # print(first, test, total)
-
-        # print(first, second)
-
-        # total += get_valid_combinations(start, arrangement)
-        # print(combinations)
-
-    return total
-
-    # 34144603979562 för lågt
-    # 56776584635449 för lågt
-
-    # 252446150283850 för hög
-
-    # start = [*start]
-    # for arrange_ix, arrangement in enumerate(arrangements):
-    #     print(len(start) - arrangement + 1)
-    #     left_offset = sum(arrangements[:arrange_ix]) + len(
-    #         arrangements[:arrange_ix]
-    #     )
-    #     right_offset = sum(arrangements[arrange_ix + 1 :]) + len(
-    #         arrangements[arrange_ix + 1 :]
-    #     )
-    #     for i in range(
-    #         left_offset, len(start) - arrangement + 1 - right_offset
-    #     ):
-    #         if "." in start[i : i + arrangement]:
-    #             continue
-    #         test = start[::]
-    #         print(i, i + arrangement - 1)
-    #         for j in range(arrangement):
-    #             test[i + j] = "#"
-    #         test = "".join(test)
-    #         print(test)
+    pass
 
 
 if __name__ == "__main__":
@@ -257,6 +201,11 @@ if __name__ == "__main__":
 
 
 """ Testing
+
+# 34144603979562 för lågt
+# 56776584635449 för lågt
+
+# 252446150283850 för hög
 
 n * (n + 1) * (n + 2) / 6
 n * (n + 1) / 2
