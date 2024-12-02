@@ -26,7 +26,7 @@ def main():
     lines = read_file(input_file)
 
     part1_result = part1(lines)
-    # print(part1_result)
+    print(part1_result)
     # part2_result = part2(lines)
     # print(part2_result)
 
@@ -34,37 +34,92 @@ def main():
 # ?#?#?#?#?#?#?#?
 # .#.###.#?#?#?#?
 
+"""
+    ??.?????.? 3,1
+
+    ['#.?.###'] [1, 1, 3] = 1*1*1 = 1
+    ['.??..??...?##.'] [1, 1, 3] = 2*2*1 = 4
+    ['.#.###.#.#?#?#?'] [1, 3, 1, 6] = 1*1*1*1 = 1
+    ['????.#...#...'] [4, 1, 1] = 1*1*1 = 1
+    ['????.######..#####.'] [1, 6, 5] = 4*1*1 = 4
+    ['.###.##.????', '.###.?##.???', '.###.??##.??', '.###.???##.?'] [3, 2, 1] = (1*1*4) + (1*1*3) + (1*1*2) + (1*1*1) = 4 + 3 + 2 + 1 = 10
+
+    1 + 4 + 1 + 1 + 4 + 10 = 4 + 4 + 3 + 10 = 21
+"""
+
 
 def part1(lines):
+    def valid_combination(arrangement, setup):
+        arrangement = arrangement.replace("?", ".")
+        groups = [group for group in arrangement.split(".") if group != ""]
+        if len(groups) != len(setup):
+            return False
+
+        for ix, group in enumerate(groups):
+            if len(group) != setup[ix]:
+                return False
+
+        return True
+
     def find(spring, setup):
+        # print(spring)
         queue = [(spring, 0, 0)]
 
-        final = []
+        final = set()
 
         # print("original:", spring)
         while len(queue) != 0:
             curr_spring, curr_group, curr_ix = queue.pop(0)
 
-            groups = [group for group in curr_spring.split(".") if group != ""]
-            if len(groups) == len(setup):
-                # print("last:", curr_spring)
-                final.append(curr_spring)
+            # groups = [group for group in curr_spring.split(".") if group != ""]
+            # if len(groups) == len(setup):
+            #     # print("last:", curr_spring)
+            #     final.append(curr_spring)
+            #     continue
+
+            # print(curr_spring, curr_group, curr_ix)
+            if valid_combination(curr_spring, setup):
+                final.add(curr_spring.replace("?", "."))
+
+            if curr_group == len(setup):
                 continue
 
-            for i in range(curr_ix, len(curr_spring) - 1):
+            for i in range(curr_ix, len(curr_spring)):
                 start = i
                 end = start + setup[curr_group] - 1
-                if end + 1 >= len(curr_spring):
-                    break
                 slice = curr_spring[start : end + 1]
 
                 if curr_spring[i] == ".":
                     continue
 
+                if end + 1 == len(curr_spring):
+                    new_spring = (
+                        curr_spring[:i]
+                        + "#" * len(slice)
+                        + curr_spring[i + len(slice) + 1 :]
+                    )
+                    # print(new_spring)
+                    queue.append((new_spring, curr_group + 1, i + len(slice)))
+                    break
+
                 if curr_spring[end + 1] == "#":
                     new_spring = curr_spring[:i] + "." + curr_spring[i + 1 :]
                     queue.append((new_spring, curr_group, i))
                     # print(new_spring)
+                    break
+
+                if (
+                    curr_spring[i] == "?"
+                    and "." in slice
+                    and spring[end + 1] != "#"
+                ):
+                    new_spring = (
+                        curr_spring[:i]
+                        + len(slice) * "."
+                        + curr_spring[i + len(slice) :]
+                    )
+                    # print(new_spring)
+                    queue.append((new_spring, curr_group, i + len(slice)))
                     break
 
                 if (
@@ -78,7 +133,7 @@ def part1(lines):
                         + "."
                         + curr_spring[i + 1 + setup[curr_group] :]
                     )
-                    # print(new_spring)
+                    print(new_spring)
                     queue.append(
                         (new_spring, curr_group + 1, i + setup[curr_group])
                     )
@@ -89,8 +144,15 @@ def part1(lines):
                     and "." not in slice
                     and spring[end + 1] != "#"
                 ):
+                    # new_spring = (
+                    #     curr_spring[:i]
+                    #     + setup[curr_group] * "#"
+                    #     + "."
+                    #     + curr_spring[i + 1 + setup[curr_group] :]
+                    # )
                     new_spring = (
-                        curr_spring[:i]
+                        curr_spring[:curr_ix]
+                        + "." * (i - curr_ix)
                         + setup[curr_group] * "#"
                         + "."
                         + curr_spring[i + 1 + setup[curr_group] :]
@@ -105,9 +167,30 @@ def part1(lines):
 
         return final
 
-    for spring, setup in lines:
+    def count_permutations(arrangements, setup):
+        # print(arrangements, setup)
+        total_perm = 0
+        for arrangement in arrangements:
+            groups = [group for group in arrangement.split(".") if group != ""]
+            # print(groups)
+            perm = 1
+            for i in range(len(groups)):
+                if len(groups[i]) == setup[i]:
+                    continue
+                if setup[i] == 1:
+                    perm *= len(groups[i])
+            total_perm += perm
+        return total_perm
+
+    perm = 0
+    for spring, setup in lines[1:2]:
         test = find(spring, setup)
         print(test, setup)
+        perm += len(test)
+        # perm += count_permutations(test, setup)
+        # print(perm)
+
+    return perm
 
 
 def part1_old(lines):
