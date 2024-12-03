@@ -25,10 +25,10 @@ def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
-    part1_result = part1(lines)
-    print(part1_result)
-    # part2_result = part2(lines)
-    # print(part2_result)
+    # part1_result = part1(lines)
+    # print(part1_result)
+    part2_result = part2(lines)
+    print(part2_result)
 
 
 def part1(lines):
@@ -156,7 +156,86 @@ def part1(lines):
 
 
 def part2(lines):
-    pass
+    def evaluate(dp, spring, setup, curr_index, curr_group):
+        # print("inne")
+        key = (spring, curr_index, curr_group)
+        if key in dp:
+            return dp[key]
+
+        if curr_group >= len(setup):
+            dp[key] = 1
+            return dp[key]
+
+        if (
+            curr_index
+            >= len(spring)
+            # or spring[curr_index:].count("?") + spring[curr_index:].count("#")
+            # < sum(setup[curr_group:]) + len(setup[curr_group:]) - 1
+        ):
+            dp[key] = 0
+            return dp[key]
+
+        # print(curr_index, curr_group)
+
+        start = curr_index
+        end = start + setup[curr_group] - 1
+        slice = spring[start : end + 1]
+
+        if spring[start] == ".":
+            dp[key] = evaluate(dp, spring, setup, curr_index + 1, curr_group)
+            # print(curr_index + 1, curr_group)
+            return dp[key]
+
+        if spring[start] == "?":
+            if "." in slice or (
+                end + 1 < len(spring) and spring[end + 1] == "#"
+            ):
+                dp[key] = evaluate(
+                    dp, spring, setup, curr_index + 1, curr_group
+                )
+                # print(curr_index + 1, curr_group)
+                return dp[key]
+
+            skip = evaluate(dp, spring, setup, curr_index + 1, curr_group)
+            choose = evaluate(
+                dp,
+                spring,
+                setup,
+                curr_index + setup[curr_group] + 1,
+                curr_group + 1,
+            )
+            dp[key] = skip + choose
+            # print(curr_index + 1, curr_group)
+            # print(curr_index + setup[curr_group] + 1, curr_group + 1)
+            return dp[key]
+
+        if spring[start] == "#":
+            if "." in slice:
+                dp[key] = 0
+                # return dp[key]
+
+            dp[key] = evaluate(
+                dp,
+                spring,
+                setup,
+                curr_index + setup[curr_group] + 1,
+                curr_group + 1,
+            )
+            # print(curr_index + setup[curr_group] + 1, curr_group + 1)
+            return dp[key]
+
+    total = 0
+
+    # print(evaluate(dict(), "?###????????", [3, 2, 1], 0, 0))
+
+    print(evaluate(dict(), "???.###", [1, 1, 3], 0, 0))
+
+    # for line in lines[0:1]:
+    #     spring, setup = line
+    #     val = evaluate(dict(), spring, setup, 0, 0)
+    #     total += val
+
+    return total
 
 
 if __name__ == "__main__":
