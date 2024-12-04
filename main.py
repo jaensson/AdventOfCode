@@ -3,6 +3,7 @@ from template.main import main as template
 from day_1.main import main as day1
 from day_2.main import main as day2
 from day_3.main import main as day3
+from day_4.main import main as day4
 
 
 def main(day: int):
@@ -15,6 +16,8 @@ def main(day: int):
             day2()
         case "3":
             day3()
+        case "4":
+            day4()
 
 
 if __name__ == "__main__":
