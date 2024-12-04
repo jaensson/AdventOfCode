@@ -25,8 +25,8 @@ def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
-    # part1_result = part1(lines)
-    # print(part1_result)
+    part1_result = part1(lines)
+    print(part1_result)
     part2_result = part2(lines)
     print(part2_result)
 
@@ -162,18 +162,43 @@ def part2(lines):
         if key in dp:
             return dp[key]
 
+        hashtags_left = spring[curr_index:].count("#")
+        question_marks_left = spring[curr_index:].count("?")
+
         if curr_group >= len(setup):
             dp[key] = 1
             return dp[key]
 
+        if hashtags_left + question_marks_left < sum(
+            setup[curr_group:]
+        ):  # No characters left to fill
+            dp[key] = 0
+            return dp[key]
+
         if (
-            curr_index
-            >= len(spring)
-            # or spring[curr_index:].count("?") + spring[curr_index:].count("#")
-            # < sum(setup[curr_group:]) + len(setup[curr_group:]) - 1
+            curr_group >= len(setup)
+            and curr_index <= len(spring)
+            or curr_index >= len(spring)
+            and curr_group <= len(setup)
         ):
             dp[key] = 0
             return dp[key]
+
+        # if curr_group >= len(setup) and hashtags_left == 0:
+        #     dp[key] = 1
+        #     return dp[key]
+
+        # if (
+        #     curr_index >= len(spring)
+        #     or curr_group >= len(setup)
+        #     and hashtags_left != 0
+        # ):
+        #     dp[key] = 0
+        #     return dp[key]
+
+        # if hashtags_left + question_marks_left < sum(setup[curr_group:]):
+        #     dp[key] = 0
+        #     return dp[key]
 
         # print(curr_index, curr_group)
 
@@ -210,9 +235,13 @@ def part2(lines):
             return dp[key]
 
         if spring[start] == "#":
-            if "." in slice:
+            if (
+                "." in slice
+                or end + 1 < len(spring)
+                and spring[end + 1] == "#"
+            ):
                 dp[key] = 0
-                # return dp[key]
+                return dp[key]
 
             dp[key] = evaluate(
                 dp,
@@ -228,12 +257,19 @@ def part2(lines):
 
     # print(evaluate(dict(), "?###????????", [3, 2, 1], 0, 0))
 
-    print(evaluate(dict(), "???.###", [1, 1, 3], 0, 0))
+    # print(evaluate(dict(), "???.###", [1, 1, 3], 0, 0))
 
-    # for line in lines[0:1]:
-    #     spring, setup = line
-    #     val = evaluate(dict(), spring, setup, 0, 0)
-    #     total += val
+    for line in lines:
+        spring, setup = line
+        spring = "?".join([spring] * 5)
+        setup = setup * 5
+
+        # print(spring, setup)
+
+        test = dict()
+        val = evaluate(test, spring, setup, 0, 0)
+        total += val
+        # print(test)
 
     return total
 
