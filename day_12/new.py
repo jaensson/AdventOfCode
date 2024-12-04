@@ -157,7 +157,6 @@ def part1(lines):
 
 def part2(lines):
     def evaluate(dp, spring, setup, curr_index, curr_group):
-        # print("inne")
         key = (spring, curr_index, curr_group)
         if key in dp:
             return dp[key]
@@ -190,7 +189,6 @@ def part2(lines):
 
         if spring[start] == ".":
             dp[key] = evaluate(dp, spring, setup, curr_index + 1, curr_group)
-            # print(curr_index + 1, curr_group)
             return dp[key]
 
         if spring[start] == "?":
@@ -200,7 +198,6 @@ def part2(lines):
                 dp[key] = evaluate(
                     dp, spring, setup, curr_index + 1, curr_group
                 )
-                # print(curr_index + 1, curr_group)
                 return dp[key]
 
             skip = evaluate(dp, spring, setup, curr_index + 1, curr_group)
@@ -212,8 +209,6 @@ def part2(lines):
                 curr_group + 1,
             )
             dp[key] = skip + choose
-            # print(curr_index + 1, curr_group)
-            # print(curr_index + setup[curr_group] + 1, curr_group + 1)
             return dp[key]
 
         if spring[start] == "#":
@@ -232,26 +227,15 @@ def part2(lines):
                 curr_index + setup[curr_group] + 1,
                 curr_group + 1,
             )
-            # print(curr_index + setup[curr_group] + 1, curr_group + 1)
             return dp[key]
 
     total = 0
-
-    # print(evaluate(dict(), "?###????????", [3, 2, 1], 0, 0))
-
-    # print(evaluate(dict(), "???.###", [1, 1, 3], 0, 0))
-
     for line in lines:
         spring, setup = line
         spring = "?".join([spring] * 5)
         setup = setup * 5
-
-        # print(spring, setup)
-
-        test = dict()
-        val = evaluate(test, spring, setup, 0, 0)
+        val = evaluate(dict(), spring, setup, 0, 0)
         total += val
-        # print(test)
 
     return total
 
