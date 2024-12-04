@@ -165,7 +165,7 @@ def part2(lines):
         hashtags_left = spring[curr_index:].count("#")
         question_marks_left = spring[curr_index:].count("?")
 
-        if curr_group >= len(setup):
+        if curr_group >= len(setup) and hashtags_left == 0:
             dp[key] = 1
             return dp[key]
 
@@ -183,24 +183,6 @@ def part2(lines):
         ):
             dp[key] = 0
             return dp[key]
-
-        # if curr_group >= len(setup) and hashtags_left == 0:
-        #     dp[key] = 1
-        #     return dp[key]
-
-        # if (
-        #     curr_index >= len(spring)
-        #     or curr_group >= len(setup)
-        #     and hashtags_left != 0
-        # ):
-        #     dp[key] = 0
-        #     return dp[key]
-
-        # if hashtags_left + question_marks_left < sum(setup[curr_group:]):
-        #     dp[key] = 0
-        #     return dp[key]
-
-        # print(curr_index, curr_group)
 
         start = curr_index
         end = start + setup[curr_group] - 1
