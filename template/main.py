@@ -8,3 +8,11 @@ def main():
 
     for line in lines:
         print(line)
+
+
+def part1(lines):
+    pass
+
+
+def part2(lines):
+    pass
