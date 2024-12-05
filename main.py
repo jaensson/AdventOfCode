@@ -4,6 +4,7 @@ from day_1.main import main as day1
 from day_2.main import main as day2
 from day_3.main import main as day3
 from day_4.main import main as day4
+from day_5.main import main as day5
 
 
 def main(day: int):
@@ -18,6 +19,8 @@ def main(day: int):
             day3()
         case "4":
             day4()
+        case "5":
+            day5()
 
 
 if __name__ == "__main__":
