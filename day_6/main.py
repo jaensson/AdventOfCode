@@ -6,6 +6,8 @@ def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
+    lines = [list(line) for line in lines]
+
     starting_point = 0
 
     for y in range(len(lines)):
@@ -83,137 +85,160 @@ def part1(grid, starting_point):
 
 
 def part2(grid, starting_point):
-    def test_if_loop(start_x, start_y, start_direction):
-        def is_start(x, y, direction):
-            return (
-                x == start_x and y == start_y and direction == start_direction
-            )
+    def is_loop(start_x, start_y, start_direction):
+        # print(start_x, start_y, start_direction)
+        start_direction = start_direction % 4
+
+        seen = set()
+        seen.add((start_x, start_y, start_direction))
+
+        next_cell = None
+
+        if start_direction == 0:
+            # print("jag gick upp")
+            next_cell = (start_x, start_y - 1)
+        elif start_direction == 1:
+            # print("jag gick höger")
+            next_cell = (start_x + 1, start_y)
+        elif start_direction == 2:
+            # print("jag gick neråt")
+            next_cell = (start_x, start_y + 1)
+        elif start_direction == 3:
+            # print("jag gick vänster")
+            next_cell = (start_x - 1, start_y)
+
+        if (
+            next_cell[0] == -1
+            or next_cell[0] == len(grid[0])
+            or next_cell[1] == -1
+            or next_cell[1] == len(grid)
+        ):
+            return False
+        if grid[next_cell[1]][next_cell[0]] == "#":
+            return False
 
         x, y, direction = start_x, start_y, start_direction
-        print("start", x, y, direction)
-        dir = direction
 
-        # for d in range(direction, direction + 4):
         while True:
-            dir = (dir + 1) % 4
-
-            found_wall = False
-            if dir == 0:  # UP
-                # print("up")
-                for i in range(y, 0, -1):
-                    if grid[i - 1][x] == "#":
-                        found_wall = True
-                        break
-                    y -= 1
-                    if is_start(x, y, dir):
-                        return True
-            if dir == 1:  # RIGHT
-                # print("right")
-                for i in range(x, len(grid[0]) - 1):
-                    if grid[y][i + 1] == "#":
-                        found_wall = True
-                        break
-                    x += 1
-                    if is_start(x, y, dir):
-                        return True
-            if dir == 2:  # DOWN
-                # print("down")
-                for i in range(y, len(grid) - 1):
-                    if grid[i + 1][x] == "#":
-                        found_wall = True
-                        break
-                    y += 1
-                    if is_start(x, y, dir):
-                        return True
-            if dir == 3:  # LEFT
-                # print("left")
-                for i in range(x, 0, -1):
-                    if grid[y][i - 1] == "#":
-                        found_wall = True
-                        break
-                    x -= 1
-                    if is_start(x, y, dir):
-                        return True
-
-            # print(x, y, dir)
-            if not found_wall:
+            if y == 0 or x == 0 or y + 1 == len(grid) or x + 1 == len(grid[0]):
                 return False
 
-        # while len(stack) != 0:
-        #     pass
+            direction = (direction + 1) % 4
+            seen.add((x, y, direction))
+            if direction == 0:
+                while y > 0 and grid[y - 1][x] != "#":
+                    y -= 1
+                    if (x, y, direction) in seen:
+
+                        return True
+                    seen.add((x, y, direction))
+            elif direction == 1:
+                while x < len(grid[0]) - 1 and grid[y][x + 1] != "#":
+                    x += 1
+                    if (x, y, direction) in seen:
+                        return True
+                    seen.add((x, y, direction))
+            elif direction == 2:
+                while y < len(grid) - 1 and grid[y + 1][x] != "#":
+                    y += 1
+                    if (x, y, direction) in seen:
+                        return True
+                    seen.add((x, y, direction))
+            elif direction == 3:
+                while x > 0 and grid[y][x - 1] != "#":
+                    x -= 1
+                    if (x, y, direction) in seen:
+                        return True
+                    seen.add((x, y, direction))
+
+        # print(seen)
 
         # print(x, y, direction)
 
-    def walk(grid, starting_point):
+    def walk(path, grid, starting_point):
         stack = []
-        seen = set()
+        # seen = set()
         stack.append(starting_point)
 
         while len(stack) != 0:
             x, y, direction = stack.pop(0)
 
             if x < 0 or x >= len(grid[0]) or y < 0 or y >= len(grid):
+                # print("inne")
                 break
 
-            seen.add((x, y, direction % 4))
+            # print(x, y, direction % 4)
 
-            if direction % 4 == 0:
-                if y - 1 < 0:
-                    break
+            # print(x, y, direction % 4)
+            if (x, y, direction % 4) in path:
+                # print("inne som fan")
+                return True
 
-                if grid[y - 1][x] == "#":
+            path.add((x, y, direction % 4))
+            if direction % 4 == 0:  # UP
+                # print("up", x, y)
+                if y - 1 >= 0 and grid[y - 1][x] == "#":
                     stack.append((x, y, direction + 1))
                 else:
                     stack.append((x, y - 1, 0))
-            elif direction % 4 == 1:
-                if x + 1 >= len(grid[0]):
-                    break
-
-                if grid[y][x + 1] == "#":
+            elif direction % 4 == 1:  # RIGHT
+                # print("right", x, y)
+                if x + 1 < len(grid[0]) and grid[y][x + 1] == "#":
                     stack.append((x, y, direction + 1))
                 else:
                     stack.append((x + 1, y, 1))
-            elif direction % 4 == 2:
-                if y + 1 >= len(grid):
-                    break
-
-                if grid[y + 1][x] == "#":
+            elif direction % 4 == 2:  # DOWN
+                # print("down", x, y)
+                if y + 1 < len(grid) and grid[y + 1][x] == "#":
                     stack.append((x, y, direction + 1))
                 else:
                     stack.append((x, y + 1, 2))
             elif direction % 4 == 3:
-                if x - 1 < 0:
-                    break
-
-                if grid[y][x - 1] == "#":
+                # print("left", x, y)
+                if x - 1 >= 0 and grid[y][x - 1] == "#":
                     stack.append((x, y, direction + 1))
                 else:
                     stack.append((x - 1, y, 3))
 
-        return seen
+            # print(x, y, direction)
 
-    result = walk(grid, starting_point)
+        return False
 
-    # print(test_if_loop(4, 8, 3))
+    path = set()
+    walk(path, grid, starting_point)
 
-    test = set()
-    for x, y, direction in result:
-        is_loop = test_if_loop(x, y, direction)
-        if not is_loop:
+    path = list(path)
+
+    # print(path)
+
+    result = set()
+    for x, y, direction in path:
+
+        if direction == 0:
+            next_cell = (x, y - 1)
+        elif direction == 1:
+            next_cell = (x + 1, y)
+        elif direction == 2:
+            next_cell = (x, y + 1)
+        elif direction == 3:
+            next_cell = (x - 1, y)
+
+        if (
+            next_cell[0] == -1
+            or next_cell[0] == len(grid[0])
+            or next_cell[1] == -1
+            or next_cell[1] == len(grid)
+        ):
             continue
-        if direction % 4 == 0 and y > 0 and grid[y - 1][x] != "#":  # UP
-            test.add((x, y - 1))
-        if (
-            direction % 4 == 1
-            and x < len(grid[0]) - 1
-            and grid[y][x + 1] != "#"
-        ):  # RIGHT
-            test.add((x + 1, y))
-        if (
-            direction % 4 == 2 and y < len(grid) - 1 and grid[y + 1][x] != "#"
-        ):  # UP
-            test.add((x, y + 1))
-        if direction % 4 == 3 and x > 0 and grid[y][x - 1] != "#":  # LEFT
-            test.add((x - 1, y))
+        if grid[next_cell[1]][next_cell[0]] == "#":
+            continue
 
-    return len(test)
+        grid_copy = [line[::] for line in grid]
+        grid_copy[next_cell[1]][next_cell[0]] = "#"
+
+        if walk(set(), grid_copy, starting_point):
+            result.add((next_cell[0], next_cell[1]))
+
+    # print(result)
+
+    return len(result)
