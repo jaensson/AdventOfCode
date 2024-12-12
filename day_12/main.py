@@ -10,8 +10,8 @@ def main():
 
     part1_result = part1(lines)
     print(part1_result)
-    # part2_result = part2(lines)
-    # print(part2_result)
+    part2_result = part2(lines)
+    print(part2_result)
 
 
 def part1(grid):
@@ -48,7 +48,6 @@ def part1(grid):
             else:
                 fence += 1
 
-        print(fence)
         return len(current) * fence
 
     seen = set()
@@ -64,6 +63,28 @@ def part1(grid):
 
 def part2(grid):
     def find_area(seen, start_x, start_y):
+        def calc_fence_needed(left, right, down, up, x, y, current_region):
+            fence = 0
+
+            if not left and not up:
+                fence += 1
+            if not right and not up:
+                fence += 1
+            if not left and not down:
+                fence += 1
+            if not right and not down:
+                fence += 1
+            if up and right and grid[y - 1][x + 1] != current_region:
+                fence += 1
+            if up and left and grid[y - 1][x - 1] != current_region:
+                fence += 1
+            if down and right and grid[y + 1][x + 1] != current_region:
+                fence += 1
+            if down and left and grid[y + 1][x - 1] != current_region:
+                fence += 1
+
+            return fence
+
         current_region = grid[start_y][start_x]
 
         queue = []
@@ -79,31 +100,33 @@ def part2(grid):
 
             current.add((x, y))
             seen.add((x, y))
+
+            down = True
+            up = True
+            right = True
+            left = True
             if y + 1 < len(grid) and grid[y + 1][x] == current_region:
                 queue.append((x, y + 1))
-                if (
-                    x - 1 >= 0
-                    and grid[y + 1][x - 1] != current_region
-                    and x + 1 < len(grid[0])
-                    and grid[y + 1][x + 1] != current_region
-                ):  # Go down where both left and right is not in region
-                    fence += 2
+            else:
+                down = False
             if x + 1 < len(grid[0]) and grid[y][x + 1] == current_region:
                 queue.append((x + 1, y))
+            else:
+                right = False
             if y - 1 >= 0 and grid[y - 1][x] == current_region:
                 queue.append((x, y - 1))
+            else:
+                up = False
             if x - 1 >= 0 and grid[y][x - 1] == current_region:
                 queue.append((x - 1, y))
+            else:
+                left = False
 
-        # print(current)
+            fence += calc_fence_needed(
+                left, right, down, up, x, y, current_region
+            )
 
-        # fence = 4
-        # test = list(current)
-        # for ix, curr in enumerate(test):
-        #     x, y = curr
-        #     print(x, y)
-
-        return len(current)
+        return len(current) * fence
 
     seen = set()
     total = 0
@@ -112,7 +135,5 @@ def part2(grid):
             if (x, y) in seen:
                 continue
             total += find_area(seen, x, y)
-            break
-        break
 
     return total
