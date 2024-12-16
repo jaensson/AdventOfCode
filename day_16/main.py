@@ -54,13 +54,12 @@ def part1(grid):
         nodes = dict()
 
         while len(stack) != 0:
-            current = stack.pop()
+            current = stack.pop(0)
             pos, direction, score = current
-            # print(current)
 
-            key = (pos, direction)
+            key = pos
             if (
-                key in nodes and nodes[key] < score
+                key in nodes and nodes[key] <= score
             ):  # Already been to this node with a better score
                 continue
 
@@ -68,20 +67,40 @@ def part1(grid):
 
             x, y = pos
 
-            # This is the problem => might just spin around and adding alot of possible outcomes but in reality there are just 3
-            stack.append(((x, y), (direction + 1) % 4, score + 1000))
-            stack.append(((x, y), (direction - 1) % 4, score + 1000))
+            if direction == 0:  # NORTH
+                if grid[y][x - 1] != "#":  # WEST
+                    stack.append(((x - 1, y), 3, score + 1001))
+                if grid[y][x + 1] != "#":  # EAST
+                    stack.append(((x + 1, y), 1, score + 1001))
 
-            if direction == 0 and grid[y - 1][x] != "#":  # NORTH
-                stack.append(((x, y - 1), direction, score + 1))
-            if direction == 1 and grid[y][x + 1] != "#":  # EAST
-                stack.append(((x + 1, y), direction, score + 1))
-            if direction == 2 and grid[y + 1][x] != "#":  # SOUTH
-                stack.append(((x, y + 1), direction, score + 1))
-            if direction == 3 and grid[y][x - 1] != "#":  # WEST
-                stack.append(((x - 1, y), direction, score + 1))
+                if grid[y - 1][x] != "#":
+                    stack.append(((x, y - 1), 0, score + 1))
+            if direction == 1:  # EAST
+                if grid[y - 1][x] != "#":  # NORTH
+                    stack.append(((x, y - 1), 0, score + 1001))
+                if grid[y + 1][x] != "#":  # SOUTH
+                    stack.append(((x, y + 1), 2, score + 1001))
 
-        return min(nodes[(ending_position, 0)], nodes[(ending_position, 1)])
+                if grid[y][x + 1] != "#":
+                    stack.append(((x + 1, y), 1, score + 1))
+            if direction == 2:  # SOUTH
+                if grid[y][x + 1] != "#":  # EAST
+                    stack.append(((x + 1, y), 1, score + 1001))
+                if grid[y][x - 1] != "#":  # WEST
+                    stack.append(((x - 1, y), 3, score + 1001))
+
+                if grid[y + 1][x] != "#":
+                    stack.append(((x, y + 1), 2, score + 1))
+            if direction == 3:  # WEST
+                if grid[y + 1][x] != "#":  # SOUTH
+                    stack.append(((x, y + 1), 2, score + 1001))
+                if grid[y - 1][x] != "#":  # NORTH
+                    stack.append(((x, y - 1), 0, score + 1001))
+
+                if grid[y][x - 1] != "#":
+                    stack.append(((x - 1, y), 3, score + 1))
+
+        return nodes[ending_position]
 
     return walk(grid, ending_position, starting_position)
 
