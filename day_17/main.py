@@ -8,8 +8,8 @@ def main():
 
     computer = parse_computer(lines)
 
-    # part1_result = part1(computer)
-    # print(part1_result)
+    part1_result = part1(computer)
+    print(part1_result)
     part2_result = part2(computer)
     print(part2_result)
 
@@ -85,8 +85,6 @@ def part1(computer):
 
         instruction_pointer += 2
 
-    print(output, computer)
-
     return ",".join(output)
 
 
@@ -101,86 +99,69 @@ def part2(computer):
         if operand == 6:
             return computer["C"]
 
-    instructions = computer["instructions"]
-
-    print(computer)
-
-    """
-        out A (mod 8) -> A divided by combo (0, 1, 2, 3, A, B, C)
-
-        11100101011000000
-
-        1. 0
-        x = x // 8
-        (x + y1) % 8) = 0
-
-        2. 3
-        x = x // 8
-        (x+y2) % = 0
-    """
-
-    # for i in range(120000):
-
-    dp = set()
-    for i in range(120000):
-        computer_copy = {
+    def create_computer_copy(computer):
+        return {
             "A": computer["A"],
             "B": computer["B"],
             "C": computer["C"],
+            "instructions": computer["instructions"],
         }
-        computer_copy["A"] = computer["A"] + i
 
+    def get_output(computer):
         instruction_pointer = 0
         output = []
-        same = True
+
         while instruction_pointer < len(instructions):
-            key = (
-                computer_copy["A"],
-                computer_copy["B"],
-                computer_copy["C"],
-                instruction_pointer,
-                "".join(output),
-            )
-            if key in dp:
-                print("inne")
-                break
-
-            dp.add(key)
-
             current_instruction = instructions[instruction_pointer]
             operand = instructions[instruction_pointer + 1]
             literal_operand = operand
-            combo_operand = find_combo_operand(computer_copy, operand)
+            combo_operand = find_combo_operand(computer, operand)
 
             if current_instruction == 0:
-                computer_copy["A"] = computer_copy["A"] // (2**combo_operand)
+                computer["A"] = computer["A"] // (2**combo_operand)
             elif current_instruction == 1:
-                computer_copy["B"] = computer_copy["B"] ^ literal_operand
+                computer["B"] = computer["B"] ^ literal_operand
             elif current_instruction == 2:
-                computer_copy["B"] = combo_operand % 8
+                computer["B"] = combo_operand % 8
             elif current_instruction == 3:
-                if computer_copy["A"] != 0:
+                if computer["A"] != 0:
                     instruction_pointer = literal_operand
                     continue
             elif current_instruction == 4:
-                computer_copy["B"] = computer_copy["B"] ^ computer_copy["C"]
+                computer["B"] = computer["B"] ^ computer["C"]
             elif current_instruction == 5:
                 val = combo_operand % 8
-                if val != instructions[len(output)]:
-                    same = False
-                    break
-                output.append(str(val))
+                output.append(val)
+                # print(output)
             elif current_instruction == 6:
-                computer_copy["B"] = computer_copy["A"] // (2**combo_operand)
+                computer["B"] = computer["A"] // (2**combo_operand)
             elif current_instruction == 7:
-                computer_copy["C"] = computer_copy["A"] // (2**combo_operand)
+                computer["C"] = computer["A"] // (2**combo_operand)
 
             instruction_pointer += 2
 
-        if same:
-            print(computer["A"] + i, "same")
-            break
+        return output
 
-    print(computer_copy, computer)
+    instructions = computer["instructions"]
 
-    return ",".join(output)
+    valids = [(3, 0)]
+    max_depth = len(instructions) - 1
+    result = set()
+    while len(valids) != 0:
+        current = valids.pop(0)
+        value, depth = current
+
+        if depth == max_depth:
+            result.add(value)
+            continue
+
+        new_value = value * 8
+        for i in range(8):
+            computer_copy = create_computer_copy(computer)
+            computer_copy["A"] = new_value + i
+            output = get_output(computer_copy)
+
+            if output == instructions[-len(output) :]:
+                valids.append((new_value + i, depth + 1))
+
+    return min(result)
