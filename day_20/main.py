@@ -159,60 +159,37 @@ def part2(grid):
 
     def cheat_path(cheats, grid, regular_path, current, current_steps, start):
         total_steps = regular_path[start]
-        cheating_steps_allowed = 2
+        cheating_steps_allowed = 20
 
         queue = []
         queue.append((current, 0))
-
         seen = set()
 
         while len(queue) != 0:
             curr, steps = queue.pop(0)
             x, y = curr
 
-            key = (current, curr)
-            if curr in seen:
+            is_outside = y < 0 or x < 0 or y >= len(grid) or x >= len(grid[0])
+            is_done = steps == cheating_steps_allowed + 1
+
+            if is_outside or is_done or curr in seen:
                 continue
+
             seen.add(curr)
 
+            key = (current, curr)
             if key in cheats:
-                cheat_steps = current_steps + regular_path[curr] + steps
-                saved_steps = total_steps - (cheat_steps)
-                cheats[key] = max(cheats[key], saved_steps)
                 continue
 
-            if (
-                grid[y][x] == "." or grid[y][x] == "S" or grid[y][x] == "E"
-            ) and curr != current:
-                print(current, curr)
-                cheat_steps = current_steps + regular_path[curr] + steps
+            if grid[y][x] == "." or grid[y][x] == "E":
+                cheat_steps = steps + current_steps + regular_path[curr]
                 saved_steps = total_steps - (cheat_steps)
                 cheats[key] = saved_steps
 
-            if steps == cheating_steps_allowed:
-                continue
-
-            if grid[y][x] == "." or grid[y][x] == "S":
-                if y - 1 >= 0 and grid[y - 1][x] == "#":
-                    queue.append(((x, y - 1), steps + 1))
-                if x + 1 < len(grid[0]) and grid[y][x + 1] == "#":
-                    queue.append(((x + 1, y), steps + 1))
-                if y + 1 < len(grid) and grid[y + 1][x] == "#":
-                    queue.append(((x, y + 1), steps + 1))
-                if x - 1 >= 0 and grid[y][x - 1] == "#":
-                    queue.append(((x - 1, y), steps + 1))
-
-            if grid[y][x] == "#":
-                if y - 1 >= 0:
-                    queue.append(((x, y - 1), steps + 1))
-                if x + 1 < len(grid[0]):
-                    queue.append(((x + 1, y), steps + 1))
-                if y + 1 < len(grid):
-                    queue.append(((x, y + 1), steps + 1))
-                if x - 1 >= 0:
-                    queue.append(((x - 1, y), steps + 1))
-
-            # print(x, y, steps)
+            queue.append(((x, y - 1), steps + 1))
+            queue.append(((x + 1, y), steps + 1))
+            queue.append(((x, y + 1), steps + 1))
+            queue.append(((x - 1, y), steps + 1))
 
     def get_number_of_cheating_routes(start, end, regular_path):
         queue = []
@@ -229,74 +206,27 @@ def part2(grid):
             seen.add(current)
 
             x, y = current
-            if y - 1 >= 0:
-                if grid[y - 1][x] != "#":
-                    queue.append(((x, y - 1), steps + 1))
-                else:
-                    # print("start cheating up")
-                    cheat_path(
-                        cheats,
-                        grid,
-                        regular_path,
-                        current,
-                        steps,
-                        start,
-                    )
-
-            if x + 1 < len(grid[0]):
-                if grid[y][x + 1] != "#":
-                    queue.append(((x + 1, y), steps + 1))
-                else:
-                    # print("start cheating right")
-                    cheat_path(
-                        cheats,
-                        grid,
-                        regular_path,
-                        current,
-                        steps,
-                        start,
-                    )
-
-            if y + 1 < len(grid):
-                if grid[y + 1][x] != "#":
-                    queue.append(((x, y + 1), steps + 1))
-                else:
-                    # print("start cheating down")
-                    cheat_path(
-                        cheats,
-                        grid,
-                        regular_path,
-                        current,
-                        steps,
-                        start,
-                    )
-
-            if x - 1 >= 0:
-                if grid[y][x - 1] != "#":
-                    queue.append(((x - 1, y), steps + 1))
-                else:
-                    # print("start cheating left")
-                    cheat_path(
-                        cheats,
-                        grid,
-                        regular_path,
-                        current,
-                        steps,
-                        start,
-                    )
-
-            # break
+            cheat_path(
+                cheats,
+                grid,
+                regular_path,
+                current,
+                steps,
+                start,
+            )
+            if y - 1 >= 0 and grid[y - 1][x] != "#":
+                queue.append(((x, y - 1), steps + 1))
+            if x + 1 < len(grid[0]) and grid[y][x + 1] != "#":
+                queue.append(((x + 1, y), steps + 1))
+            if y + 1 < len(grid) and grid[y + 1][x] != "#":
+                queue.append(((x, y + 1), steps + 1))
+            if x - 1 >= 0 and grid[y][x - 1] != "#":
+                queue.append(((x - 1, y), steps + 1))
 
         result = 0
-        test = 0
         for cheat in cheats:
-            # if cheats[cheat] == 50:
-            #     # print(cheat)
-            #     test += 1
-            if 0 < cheats[cheat] < 100:
+            if cheats[cheat] >= 50:
                 result += 1
-
-        print("test", test)
 
         return result
 
