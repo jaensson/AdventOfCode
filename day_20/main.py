@@ -225,7 +225,7 @@ def part2(grid):
 
         result = 0
         for cheat in cheats:
-            if cheats[cheat] >= 50:
+            if cheats[cheat] >= 100:
                 result += 1
 
         return result
