@@ -21,7 +21,7 @@ def main():
 
     First directional keypad: (How to write the movement from the first numeric keypad)
         1. v<<A>>^A<A>AvA<^AA>A<vAAA>^A (<A^A>^^AvvvA)
-        2. v<<A>>^A<A>A<Av>A<^A>Av<AAA>^A (<A^A^>^AvvvA)
+        2. v<<A>>^A<A>A<Av>A<^A>Av>AAA>^A (<A^A^>^AvvvA)
 
     Second direction keypad (me?): (How to write the movement from the first directional keypad)
         1. <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A 
@@ -149,8 +149,6 @@ def part1(codes):
 
             result = new_result
 
-        return result
-
         new_result = set()
         shortest = min(result, key=lambda x: len(x))
 
@@ -161,52 +159,58 @@ def part1(codes):
         return list(new_result)
 
     def build_directional_keypad(directional_keypad, movements):
-        result = set()
+        def test(dp, current, index):
+            key = (movement[index - 1], current[index:])
 
+            if key in dp:
+                return dp[key]
+
+            result = directional_keypad[(current[index - 1], current[index])]
+
+            if index == len(current) - 1:
+                new_result = set()
+                for res in result:
+                    new_result.add(res + "A")
+                return new_result
+
+            new_result = set()
+            for res in result:
+                for r in test(dp, current, index + 1):
+                    new_result.add(res + "A" + r)
+
+            dp[key] = new_result
+
+            return new_result
+
+        dp = dict()
+        # first = "A" + movements[0]
+        # print(first)
+        # print(test(dp, first, 1))
+
+        all = set()
         for movement in movements:
             movement = "A" + movement
-            current = [""]
-            for i in range(1, len(movement)):
-                new_result = []
-                for r in current:
-                    for move in directional_keypad[
-                        (movement[i - 1], movement[i])
-                    ]:
-                        new_result.append(r + move + "A")
-                current = new_result
+            all = all.union(test(dp, movement, 1))
 
-            result.update(current)
-
-        return list(result)
-
-        new_result = set()
-        shortest = min(result, key=lambda x: len(x))
-
-        for r in result:
-            if len(r) == len(shortest):
-                new_result.add(r)
-
-        return list(new_result)
+        return list(all)
 
     numeric_keypad = get_numeric_keypad()
     directional_keypad = get_directional_keypad()
 
+    # ['^<^<A>A>AvvA', '<<^^A>A>AvvA', '<^^<A>A>AvvA', '<^<^A>A>AvvA', '^^<<A>A>AvvA', '^<<^A>A>AvvA']
+
     result = 0
     for code in codes:
         numeric = build_numeric_comb(numeric_keypad, code)
-        first_directional = build_directional_keypad(
-            directional_keypad, numeric
-        )
-        second_directional = build_directional_keypad(
-            directional_keypad, first_directional
-        )
+        print(numeric)
+        directional = build_directional_keypad(directional_keypad, numeric)
+        # print(directional)
 
-        shortest = min(second_directional, key=lambda x: len(x))
+        # print(directional)
 
-        number = int("".join([c for c in code if c.isdigit()]))
+        # print("v<<A>>^A<A>AvA<^AA>A<vAAA^>A" in directional)
 
-        print(len(shortest), number)
-        result += len(shortest) * number
+        # print(numeric)
 
     return result
 
