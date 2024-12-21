@@ -158,61 +158,101 @@ def part1(codes):
 
         return list(new_result)
 
-    def build_directional_keypad(directional_keypad, movements):
-        def test(dp, current, index):
-            key = (movement[index - 1], current[index:])
+    def get_test_build_directional_keypad(numeric_keypad, directional_keypad):
+        test = dict()
 
-            if key in dp:
-                return dp[key]
+        count = 0
+        for number in numeric_keypad:
+            result = []
+            for movement in numeric_keypad[number]:
+                movement = "A" + movement
 
-            result = directional_keypad[(current[index - 1], current[index])]
+                curr = [""]
+                for i in range(1, len(movement)):
+                    new_curr = []
+                    for r in curr:
+                        for dir in directional_keypad[
+                            (movement[i - 1], movement[i])
+                        ]:
+                            new_curr.append(r + dir + "A")
+                    curr = new_curr
 
-            if index == len(current) - 1:
-                new_result = set()
-                for res in result:
-                    new_result.add(res + "A")
-                return new_result
+                result.extend(curr)
 
+            shortest = min(result, key=lambda x: len(x))
             new_result = set()
             for res in result:
-                for r in test(dp, current, index + 1):
-                    new_result.add(res + "A" + r)
+                if len(res) == len(shortest):
+                    new_result.add(res)
 
-            dp[key] = new_result
+            test[number] = list(new_result)
 
-            return new_result
-
-        dp = dict()
-        # first = "A" + movements[0]
-        # print(first)
-        # print(test(dp, first, 1))
-
-        all = set()
-        for movement in movements:
-            movement = "A" + movement
-            all = all.union(test(dp, movement, 1))
-
-        return list(all)
+        return test
 
     numeric_keypad = get_numeric_keypad()
     directional_keypad = get_directional_keypad()
 
+    print(directional_keypad)
+    test = build_directional_keypad(numeric_keypad, directional_keypad)
+    # print(test)
+
+    code = "029A"
+    print(build_numeric_comb(numeric_keypad, code))
+
+    # build_directional_keypad("<A^A>^^AvvvA")
+
+    # result = [""]
+    # for i in range(1, len(code)):
+    #     print(test[code[i - 1], code[i]])
+
+    #     curr = []
+    #     for move in test[code[i - 1], code[i]]:
+    #         reverse = move[-2::-1]
+    #         new = ""
+    #         for char in reverse:
+    #             if char == ">":
+    #                 new += "<"
+    #             if char == "<":
+    #                 new += ">"
+    #             if char == "v":
+    #                 new += "^"
+    #             if char == "^":
+    #                 new += "v"
+    #         reverse = new + "A"
+
+    #         combined = move + reverse
+
+    #         curr.append(combined)
+
+    #     new_result = []
+    #     for res in result:
+    #         for r in curr:
+    #             new_result.append(res + r)
+
+    #     result = new_result
+
+    # print(result)
+    # print("v<<A>>^A<A>AvA<^AA>A<vAAA>^A" in result)
+
+    # test = [len(r) for r in result]
+    # print(test)
+
     # ['^<^<A>A>AvvA', '<<^^A>A>AvvA', '<^^<A>A>AvvA', '<^<^A>A>AvvA', '^^<<A>A>AvvA', '^<<^A>A>AvvA']
 
-    result = 0
-    for code in codes:
-        numeric = build_numeric_comb(numeric_keypad, code)
-        print(numeric)
-        directional = build_directional_keypad(directional_keypad, numeric)
-        # print(directional)
+    # result = 0
+    # for code in codes:
+    #     numeric = build_numeric_comb(numeric_keypad, code)
+    #     print(numeric)
+    #     directional = build_directional_keypad(directional_keypad, numeric)
+    #     # print(directional)
 
-        # print(directional)
+    #     # print(directional)
 
-        # print("v<<A>>^A<A>AvA<^AA>A<vAAA^>A" in directional)
+    #     # print("v<<A>>^A<A>AvA<^AA>A<vAAA^>A" in directional)
 
-        # print(numeric)
+    #     # print(numeric)
 
-    return result
+    # return result
 
 
 def part2(lines):
