@@ -158,86 +158,69 @@ def part1(codes):
 
         return list(new_result)
 
-    def get_test_build_directional_keypad(numeric_keypad, directional_keypad):
+    def build_directional_keypad(numeric_keypad, directional_keypad):
         test = dict()
 
-        count = 0
+        # number = ("2", "9")
+
         for number in numeric_keypad:
             result = []
             for movement in numeric_keypad[number]:
                 movement = "A" + movement
-
                 curr = [""]
                 for i in range(1, len(movement)):
-                    new_curr = []
-                    for r in curr:
-                        for dir in directional_keypad[
+                    copy = curr[::]
+                    curr = []
+                    for r in copy:
+                        for move in directional_keypad[
                             (movement[i - 1], movement[i])
                         ]:
-                            new_curr.append(r + dir + "A")
-                    curr = new_curr
+                            curr.append(r + move + "A")
+                copy = curr[::]
+                curr = []
+                for r in copy:
+                    for fallback in directional_keypad[(movement[-1], "A")]:
+                        curr.append(f"{r}{fallback}A")
 
                 result.extend(curr)
 
-            shortest = min(result, key=lambda x: len(x))
             new_result = set()
-            for res in result:
-                if len(res) == len(shortest):
-                    new_result.add(res)
+            shortest = min(result, key=lambda x: len(x))
+            for r in result:
+                if len(r) == len(shortest):
+                    new_result.add(r)
 
             test[number] = list(new_result)
+
+        # for t in test:
+        #     print(t, test[t])
 
         return test
 
     numeric_keypad = get_numeric_keypad()
     directional_keypad = get_directional_keypad()
 
-    print(directional_keypad)
+    # print(directional_keypad)
+
     test = build_directional_keypad(numeric_keypad, directional_keypad)
-    # print(test)
 
-    code = "029A"
-    print(build_numeric_comb(numeric_keypad, code))
+    code = "A029A"
 
-    # build_directional_keypad("<A^A>^^AvvvA")
+    curr = [""]
+    for i in range(1, len(code)):
+        copy = curr[::]
+        curr = []
+        for r in copy:
+            for move in test[code[i - 1], code[i]]:
+                curr.append(r + move)
 
-    # result = [""]
-    # for i in range(1, len(code)):
-    #     print(test[code[i - 1], code[i]])
+    test = set([len(r) for r in curr])
 
-    #     curr = []
-    #     for move in test[code[i - 1], code[i]]:
-    #         reverse = move[-2::-1]
-    #         new = ""
-    #         for char in reverse:
-    #             if char == ">":
-    #                 new += "<"
-    #             if char == "<":
-    #                 new += ">"
-    #             if char == "v":
-    #                 new += "^"
-    #             if char == "^":
-    #                 new += "v"
-    #         reverse = new + "A"
+    # result = set(curr)
+    print(test)
 
-    #         combined = move + reverse
-
-    #         curr.append(combined)
-
-    #     new_result = []
-    #     for res in result:
-    #         for r in curr:
-    #             new_result.append(res + r)
-
-    #     result = new_result
-
-    # print(result)
-    # print("v<<A>>^A<A>AvA<^AA>A<vAAA>^A" in result)
-
-    # test = [len(r) for r in result]
-    # print(test)
-
-    # ['^<^<A>A>AvvA', '<<^^A>A>AvvA', '<^^<A>A>AvvA', '<^<^A>A>AvvA', '^^<<A>A>AvvA', '^<<^A>A>AvvA']
+    # print(curr)
+    # print("v<<A>>^A<A>AvA<^AA>A<vAAA>^A" in curr)
 
     # result = 0
     # for code in codes:
