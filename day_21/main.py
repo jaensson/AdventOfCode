@@ -6,6 +6,7 @@ def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
+    # 265312
     part1_result = part1(lines)
     print(part1_result)
 
@@ -161,8 +162,6 @@ def part1(codes):
     def build_directional_keypad(numeric_keypad, directional_keypad):
         test = dict()
 
-        # number = ("2", "9")
-
         for number in numeric_keypad:
             result = []
             for movement in numeric_keypad[number]:
@@ -197,45 +196,93 @@ def part1(codes):
 
         return test
 
+    def build_my_directional(numeric_keypad, directional_keypad):
+        test = dict()
+
+        for number in numeric_keypad:
+            result = []
+            for movement in numeric_keypad[number]:
+                movement = "A" + movement
+                curr = [""]
+                for i in range(1, len(movement)):
+                    copy = curr[::]
+                    curr = []
+                    for r in copy:
+                        for move in directional_keypad[
+                            (movement[i - 1], movement[i])
+                        ]:
+                            curr.append(r + move + "A")
+                copy = curr[::]
+                curr = []
+                for r in copy:
+                    for fallback in directional_keypad[(movement[-1], "A")]:
+                        curr.append(f"{r}{fallback}")
+
+                result.extend(curr)
+
+            new_result = set()
+            shortest = min(result, key=lambda x: len(x))
+            for r in result:
+                if len(r) == len(shortest):
+                    new_result.add(r)
+
+            test[number] = list(new_result)
+
+        return test
+
     numeric_keypad = get_numeric_keypad()
     directional_keypad = get_directional_keypad()
 
-    # print(directional_keypad)
-
     test = build_directional_keypad(numeric_keypad, directional_keypad)
 
-    code = "A029A"
+    test1 = build_my_directional(test, directional_keypad)
+
+    print(numeric_keypad[("A", "1")])
+
+    # print(test[("A", "0")])
+    # print("v<<A>>^A" in test[("A", "0")])
+
+    # print(test1[("A", "0")])
+    # print("v<A<AA>>^AvAA<^A>A" in test1[("A", "0")])
+
+    code = "A179A"
 
     curr = [""]
     for i in range(1, len(code)):
         copy = curr[::]
         curr = []
         for r in copy:
-            for move in test[code[i - 1], code[i]]:
+            for move in test1[code[i - 1], code[i]]:
                 curr.append(r + move)
 
-    test = set([len(r) for r in curr])
+    # test = set([len(r) for r in curr])
+    # print(test)
 
-    # result = set(curr)
-    print(test)
+    # print(
+    #     "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"
+    #     in curr
+    # )
 
-    # print(curr)
-    # print("v<<A>>^A<A>AvA<^AA>A<vAAA>^A" in curr)
+    print(curr[0])
 
-    # result = 0
+    """
+    <v<A >>^A <vA <A >>^A A vA A <^A >A <v<A >>^A A vA ^A <vA >^A A <A >A <v<A >A >^A A A vA <^A >A
+    v<<A A >A ^>A A <A v>A ^A vA ^A v<<A ^>>A A vA ^A <vA >^A A <A >A <<vA >A >^A A A vA ^<A >A
+    """
+
+    result = 0
     # for code in codes:
-    #     numeric = build_numeric_comb(numeric_keypad, code)
-    #     print(numeric)
-    #     directional = build_directional_keypad(directional_keypad, numeric)
-    #     # print(directional)
+    #     code = "A" + code
+    #     length = 0
+    #     for i in range(1, len(code)):
+    #         length += len(test1[code[i - 1], code[i]][0])
 
-    #     # print(directional)
+    #     print(length)
 
-    #     # print("v<<A>>^A<A>AvA<^AA>A<vAAA^>A" in directional)
+    #     number = int("".join([c for c in code if c.isdigit()]))
+    #     result += length * number
 
-    #     # print(numeric)
-
-    # return result
+    return result
 
 
 def part2(lines):
