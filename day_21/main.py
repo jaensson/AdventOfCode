@@ -76,10 +76,17 @@ def part1(codes):
 
         for y, row in enumerate(numeric_keypad):
             for x, char in enumerate(row):
+                if char == "":
+                    continue
                 for i in range(12):
                     target = numeric_keypad[i // 3][i % 3]
+                    if target == "":
+                        continue
+
+                    seen = set()
+                    seen.add((0, 3))
                     shortest[(char, target)] = dfs(
-                        x, y, (i % 3, i // 3), "", set()
+                        x, y, (i % 3, i // 3), "", seen
                     )
 
         # for t in shortest:
@@ -131,10 +138,16 @@ def part1(codes):
 
         for y, row in enumerate(directional_keypad):
             for x, char in enumerate(row):
+                if char == "":
+                    continue
                 for i in range(6):
                     target = directional_keypad[i // 3][i % 3]
+                    if target == "":
+                        continue
+                    seen = set()
+                    seen.add((0, 0))
                     shortest[(char, target)] = dfs(
-                        x, y, (i % 3, i // 3), "", set()
+                        x, y, (i % 3, i // 3), "", seen
                     )
 
         return shortest
@@ -184,6 +197,10 @@ def part1(codes):
                 result.extend(curr)
 
             new_result = set()
+            if len(result) == 0:
+                test[number] = 0
+                continue
+
             shortest = min(result, key=lambda x: len(x))
             for r in result:
                 if len(r) == len(shortest):
@@ -232,55 +249,18 @@ def part1(codes):
 
     numeric_keypad = get_numeric_keypad()
     directional_keypad = get_directional_keypad()
-
     test = build_directional_keypad(numeric_keypad, directional_keypad)
-
     test1 = build_my_directional(test, directional_keypad)
 
-    print(numeric_keypad[("A", "1")])
-
-    # print(test[("A", "0")])
-    # print("v<<A>>^A" in test[("A", "0")])
-
-    # print(test1[("A", "0")])
-    # print("v<A<AA>>^AvAA<^A>A" in test1[("A", "0")])
-
-    code = "A179A"
-
-    curr = [""]
-    for i in range(1, len(code)):
-        copy = curr[::]
-        curr = []
-        for r in copy:
-            for move in test1[code[i - 1], code[i]]:
-                curr.append(r + move)
-
-    # test = set([len(r) for r in curr])
-    # print(test)
-
-    # print(
-    #     "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"
-    #     in curr
-    # )
-
-    print(curr[0])
-
-    """
-    <v<A >>^A <vA <A >>^A A vA A <^A >A <v<A >>^A A vA ^A <vA >^A A <A >A <v<A >A >^A A A vA <^A >A
-    v<<A A >A ^>A A <A v>A ^A vA ^A v<<A ^>>A A vA ^A <vA >^A A <A >A <<vA >A >^A A A vA ^<A >A
-    """
-
     result = 0
-    # for code in codes:
-    #     code = "A" + code
-    #     length = 0
-    #     for i in range(1, len(code)):
-    #         length += len(test1[code[i - 1], code[i]][0])
+    for code in codes:
+        code = "A" + code
+        length = 0
+        for i in range(1, len(code)):
+            length += len(test1[code[i - 1], code[i]][0])
 
-    #     print(length)
-
-    #     number = int("".join([c for c in code if c.isdigit()]))
-    #     result += length * number
+        number = int("".join([c for c in code if c.isdigit()]))
+        result += length * number
 
     return result
 
