@@ -6,9 +6,10 @@ def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
-    # 265312
     part1_result = part1(lines)
     print(part1_result)
+    part2_result = part2(lines)
+    print(part2_result)
 
 
 """
@@ -252,6 +253,9 @@ def part1(codes):
     test = build_directional_keypad(numeric_keypad, directional_keypad)
     test1 = build_my_directional(test, directional_keypad)
 
+    print(test["7", "A"])
+    print(test1["7", "A"])
+
     result = 0
     for code in codes:
         code = "A" + code
@@ -265,5 +269,174 @@ def part1(codes):
     return result
 
 
-def part2(lines):
-    pass
+def part2(codes):
+    def get_numeric_keypad():
+        def bfs(start, target, seen):
+            x, y = start
+            queue = [(x, y, "")]
+            while len(queue) != 0:
+                current = queue.pop(0)
+                x, y, path = current
+
+                if (x, y) == target:
+                    return "".join(sorted(list(path)))
+
+                seen.add((x, y))
+                if y - 1 >= 0 and (x, y - 1) not in seen:
+                    queue.append((x, y - 1, path + "^"))
+
+                if x + 1 < 3 and (x + 1, y) not in seen:
+                    queue.append((x + 1, y, path + ">"))
+
+                if y + 1 <= 3 and (x, y + 1) not in seen:
+                    queue.append((x, y + 1, path + "v"))
+
+                if x - 1 >= 0 and (x - 1, y) not in seen:
+                    queue.append((x - 1, y, path + "<"))
+
+        numeric_keypad = [
+            ["7", "8", "9"],
+            ["4", "5", "6"],
+            ["1", "2", "3"],
+            ["", "0", "A"],
+        ]
+        shortest = dict()
+
+        for y, row in enumerate(numeric_keypad):
+            for x, char in enumerate(row):
+                if char == "":
+                    continue
+                for i in range(12):
+                    target = numeric_keypad[i // 3][i % 3]
+                    if target == "":
+                        continue
+
+                    seen = set()
+                    seen.add((0, 3))
+                    shortest[(char, target)] = bfs(
+                        (x, y), (i % 3, i // 3), seen
+                    )
+
+        return shortest
+
+    def get_directional_keypad():
+        def dfs(start, target, seen):
+            x, y = start
+            queue = [(x, y, "")]
+            while len(queue) != 0:
+                current = queue.pop(0)
+                x, y, path = current
+
+                if (x, y) == target:
+                    return "".join(sorted(list(path)))
+
+                seen.add((x, y))
+                if y - 1 >= 0 and (x, y - 1) not in seen:
+                    queue.append((x, y - 1, path + "^"))
+
+                if x + 1 < 3 and (x + 1, y) not in seen:
+                    queue.append((x + 1, y, path + ">"))
+
+                if y + 1 <= 3 and (x, y + 1) not in seen:
+                    queue.append((x, y + 1, path + "v"))
+
+                if x - 1 >= 0 and (x - 1, y) not in seen:
+                    queue.append((x - 1, y, path + "<"))
+
+        directional_keypad = [
+            ["", "^", "A"],
+            ["<", "v", ">"],
+        ]
+        shortest = dict()
+
+        for y, row in enumerate(directional_keypad):
+            for x, char in enumerate(row):
+                if char == "":
+                    continue
+                for i in range(6):
+                    target = directional_keypad[i // 3][i % 3]
+                    if target == "":
+                        continue
+                    seen = set()
+                    seen.add((0, 0))
+                    shortest[(char, target)] = dfs(
+                        (x, y), (i % 3, i // 3), seen
+                    )
+
+        return shortest
+
+        test = dict()
+
+        for number in numeric_keypad:
+            result = []
+            for movement in numeric_keypad[number]:
+                movement = "A" + movement
+                curr = [""]
+                for i in range(1, len(movement)):
+                    copy = curr[::]
+                    curr = []
+                    for r in copy:
+                        for move in directional_keypad[
+                            (movement[i - 1], movement[i])
+                        ]:
+                            curr.append(r + move + "A")
+                copy = curr[::]
+                curr = []
+                for r in copy:
+                    for fallback in directional_keypad[(movement[-1], "A")]:
+                        curr.append(f"{r}{fallback}")
+
+                result.extend(curr)
+
+            new_result = set()
+            shortest = min(result, key=lambda x: len(x))
+            for r in result:
+                if len(r) == len(shortest):
+                    new_result.add(r)
+
+            test[number] = list(new_result)
+
+        return test
+
+    def build_directional_keypad(numeric_keypad, directional_keypad):
+        def build_comb(movement, position, current, result):
+            if position >= len(movement) - 1:
+                if len(current) not in result:
+                    result[len(current)] = set()
+                result[len(current)].add(current)
+                return result
+
+            for move in directional_keypad[
+                (movement[position], movement[position + 1])
+            ]:
+                build_comb(movement, position + 1, f"{current}{move}A", result)
+
+            return result
+
+        test = dict()
+
+        result = dict()
+        for movement in numeric_keypad[("7", "A")]:
+            movement = f"A{movement}A"
+            build_comb(movement, 0, "", result)
+        movement = result[min(result.keys())]
+
+        for i in range(2):
+            result = dict()
+            for move in movement:
+                move = f"A{move}"
+                build_comb(move, 0, "", result)
+
+            movement = result[min(result.keys())]
+
+        # print(movement)
+
+        return test
+
+    numeric_keypad = get_numeric_keypad()
+    directional_keypad = get_directional_keypad()
+    movement = build_directional_keypad(numeric_keypad, directional_keypad)
+
+    result = 0
+
+    return result
