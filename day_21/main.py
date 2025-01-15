@@ -1,13 +1,14 @@
 import os
 from lib.helpers import read_file
+import math
 
 
 def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
-    part1_result = part1(lines)
-    print(part1_result)
+    # part1_result = part1(lines)
+    # print(part1_result)
     part2_result = part2(lines)
     print(part2_result)
 
@@ -271,28 +272,39 @@ def part1(codes):
 
 def part2(codes):
     def get_numeric_keypad():
-        def bfs(start, target, seen):
-            x, y = start
-            queue = [(x, y, "")]
-            while len(queue) != 0:
-                current = queue.pop(0)
-                x, y, path = current
+        def dfs(x, y, target, move, seen):
+            if (x, y) == target:
+                return [move]
 
-                if (x, y) == target:
-                    return "".join(sorted(list(path)))
+            seen.add((x, y))
+            test = []
+            if y - 1 >= 0 and (x, y - 1) not in seen:
+                up = dfs(x, y - 1, target, move + "^", seen.copy())
+                test.extend(up)
 
-                seen.add((x, y))
-                if y - 1 >= 0 and (x, y - 1) not in seen:
-                    queue.append((x, y - 1, path + "^"))
+            if x + 1 < 3 and (x + 1, y) not in seen:
+                right = dfs(x + 1, y, target, move + ">", seen.copy())
+                test.extend(right)
 
-                if x + 1 < 3 and (x + 1, y) not in seen:
-                    queue.append((x + 1, y, path + ">"))
+            if y + 1 <= 3 and (x, y + 1) not in seen:
+                down = dfs(x, y + 1, target, move + "v", seen.copy())
+                test.extend(down)
 
-                if y + 1 <= 3 and (x, y + 1) not in seen:
-                    queue.append((x, y + 1, path + "v"))
+            if x - 1 >= 0 and (x - 1, y) not in seen:
+                left = dfs(x - 1, y, target, move + "<", seen.copy())
+                test.extend(left)
 
-                if x - 1 >= 0 and (x - 1, y) not in seen:
-                    queue.append((x - 1, y, path + "<"))
+            if len(test) != 0:
+                result = []
+                shortest = min(test, key=lambda x: len(x))
+
+                for t in test:
+                    if len(t) == len(shortest):
+                        result.append(t)
+
+                return result
+
+            return []
 
         numeric_keypad = [
             ["7", "8", "9"],
@@ -313,35 +325,50 @@ def part2(codes):
 
                     seen = set()
                     seen.add((0, 3))
-                    shortest[(char, target)] = bfs(
-                        (x, y), (i % 3, i // 3), seen
+                    shortest[(char, target)] = dfs(
+                        x, y, (i % 3, i // 3), "", seen
                     )
 
+        # for t in shortest:
+        #     print(t, shortest[t])
+
+        # print(shortest)
         return shortest
 
     def get_directional_keypad():
-        def dfs(start, target, seen):
-            x, y = start
-            queue = [(x, y, "")]
-            while len(queue) != 0:
-                current = queue.pop(0)
-                x, y, path = current
+        def dfs(x, y, target, move, seen):
+            if (x, y) == target:
+                return [move]
 
-                if (x, y) == target:
-                    return "".join(sorted(list(path)))
+            seen.add((x, y))
+            test = []
+            if y - 1 >= 0 and (x, y - 1) not in seen:
+                up = dfs(x, y - 1, target, move + "^", seen.copy())
+                test.extend(up)
 
-                seen.add((x, y))
-                if y - 1 >= 0 and (x, y - 1) not in seen:
-                    queue.append((x, y - 1, path + "^"))
+            if x + 1 < 3 and (x + 1, y) not in seen:
+                right = dfs(x + 1, y, target, move + ">", seen.copy())
+                test.extend(right)
 
-                if x + 1 < 3 and (x + 1, y) not in seen:
-                    queue.append((x + 1, y, path + ">"))
+            if y + 1 < 2 and (x, y + 1) not in seen:
+                down = dfs(x, y + 1, target, move + "v", seen.copy())
+                test.extend(down)
 
-                if y + 1 <= 3 and (x, y + 1) not in seen:
-                    queue.append((x, y + 1, path + "v"))
+            if x - 1 >= 0 and (x - 1, y) not in seen:
+                left = dfs(x - 1, y, target, move + "<", seen.copy())
+                test.extend(left)
 
-                if x - 1 >= 0 and (x - 1, y) not in seen:
-                    queue.append((x - 1, y, path + "<"))
+            if len(test) != 0:
+                result = []
+                shortest = min(test, key=lambda x: len(x))
+
+                for t in test:
+                    if len(t) == len(shortest):
+                        result.append(t)
+
+                return result
+
+            return []
 
         directional_keypad = [
             ["", "^", "A"],
@@ -360,7 +387,7 @@ def part2(codes):
                     seen = set()
                     seen.add((0, 0))
                     shortest[(char, target)] = dfs(
-                        (x, y), (i % 3, i // 3), seen
+                        x, y, (i % 3, i // 3), "", seen
                     )
 
         return shortest
@@ -398,45 +425,51 @@ def part2(codes):
 
         return test
 
-    def build_directional_keypad(numeric_keypad, directional_keypad):
-        def build_comb(movement, position, current, result):
-            if position >= len(movement) - 1:
-                if len(current) not in result:
-                    result[len(current)] = set()
-                result[len(current)].add(current)
-                return result
+    def calculate_steps(dp, numeric_keypad, directional_keypad, code):
+        def min_steps(current, depth):
+            key = (current, depth)
+            if key in dp:
+                return dp[key]
+            if depth == 0:
+                return len(current)
 
-            for move in directional_keypad[
-                (movement[position], movement[position + 1])
-            ]:
-                build_comb(movement, position + 1, f"{current}{move}A", result)
+            total_steps = 0
+            current = f"A{current}"
 
-            return result
+            for i in range(1, len(current)):
+                steps = math.inf
 
-        test = dict()
+                for path in directional_keypad[(current[i - 1], current[i])]:
+                    path = f"{path}A"
+                    steps = min(steps, min_steps(path, depth - 1))
 
-        result = dict()
-        for movement in numeric_keypad[("7", "A")]:
-            movement = f"A{movement}A"
-            build_comb(movement, 0, "", result)
-        movement = result[min(result.keys())]
+                total_steps += steps
 
-        for i in range(2):
-            result = dict()
-            for move in movement:
-                move = f"A{move}"
-                build_comb(move, 0, "", result)
+            dp[key] = total_steps
+            return dp[key]
 
-            movement = result[min(result.keys())]
+        code = f"A{code}"
 
-        # print(movement)
+        total_steps = 0
+        for i in range(1, len(code)):
+            key = (code[i - 1], code[i])
 
-        return test
+            steps = math.inf
+            for n in numeric_keypad[key]:
+                path = f"{n}A"
+                steps = min(steps, min_steps(path, 25))
+            total_steps += steps
+
+        return total_steps
 
     numeric_keypad = get_numeric_keypad()
     directional_keypad = get_directional_keypad()
-    movement = build_directional_keypad(numeric_keypad, directional_keypad)
 
+    dp = dict()
     result = 0
+    for code in codes:
+        steps = calculate_steps(dp, numeric_keypad, directional_keypad, code)
+        number = int("".join([c for c in code if c.isdigit()]))
+        result += steps * number
 
     return result
