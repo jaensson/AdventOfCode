@@ -14,8 +14,10 @@ def main():
             registers, instructions = parse(lines[:i], lines[i + 1 :])
             break
 
-    part1_result = part1(registers, instructions)
+    part1_result = part1(registers, instructions[::])
     print(part1_result)
+    part2_result = part2(registers, instructions[::])
+    print(part2_result)
 
 
 def parse(registers, instructions):
@@ -84,9 +86,147 @@ def part1(registers, instructions):
         number = str(int(registers[f"z{start:02}"])) + number
         start += 1
 
-    result = int(number, 2)
+    result = int(number, base=2)
     return result
 
 
-def part2(lines):
-    pass
+def part2(registers, instructions):
+    def half_adder(instructions):
+        valid = set()
+
+        for instruction in instructions:
+            if (
+                f"{0:02}" in instruction["left"]
+                and f"{0:02}" in instruction["left"]
+            ):
+                valid.add(tuple(instruction.items()))
+
+        return valid
+
+    def full_adder(instructions, number):
+        def get_input_xor(number):
+            for instruction in instructions:
+                if (
+                    f"{number:02}" in instruction["left"]
+                    and f"{number:02}" in instruction["right"]
+                    and instruction["operand"] == "XOR"
+                ):
+                    return instruction["result"]
+
+            return ""
+
+        def get_input_and(number):
+            for instruction in instructions:
+                if (
+                    f"{number:02}" in instruction["left"]
+                    and f"{number:02}" in instruction["right"]
+                    and instruction["operand"] == "AND"
+                ):
+                    return instruction["result"]
+            return ""
+
+        def get_carry(number):
+            if number == 0:
+                return get_input_and(number)
+
+            input_and = get_input_and(number)
+            input_xor = get_input_xor(number)
+
+            for instruction in instructions:
+                keys = ["left", "right", "result"]
+                for key in keys:
+                    if (
+                        f"{number:02}" in instruction[key]
+                        or input_xor in instruction[key]
+                        or input_and in instruction[key]
+                    ) and instruction["operand"] == "OR":
+                        return instruction["result"]
+            return ""
+
+        def get_temp(valid, carry, input_xor):
+            for val in valid:
+                val = dict(val)
+                used_registers = set()
+                used_registers.add(val["left"])
+                used_registers.add(val["right"])
+                if (
+                    val["operand"] == "AND"
+                    and val["left"] in used_registers
+                    and val["right"] in used_registers
+                ):
+                    return val["result"]
+            return ""
+
+        valid = set()
+        carry = get_carry(number - 1)
+        input_xor = get_input_xor(number)
+        input_and = get_input_and(number)
+
+        for instruction in instructions:
+            keys = ["left", "right", "result"]
+            for key in keys:
+                if (
+                    f"{number:02}" in instruction[key]
+                    or input_xor in instruction[key]
+                    or input_and in instruction[key]
+                ):
+                    valid.add(tuple(instruction.items()))
+
+        tmp = get_temp(valid, carry, input_xor)
+        # print(carry, input_xor, input_and, tmp)
+
+        for val in valid:
+            val = dict(val)
+            used_registers = set()
+            used_registers.add(val["left"])
+            used_registers.add(val["right"])
+
+            carry_to_result = (
+                val["operand"] == "XOR"
+                and carry in used_registers
+                and input_xor in used_registers
+                and f"{number:02}" in val["result"]
+            )
+
+            carry_to_tmp = (
+                val["operand"] == "AND"
+                and carry in used_registers
+                and input_xor in used_registers
+            )
+
+            out_carry = (
+                input_and in used_registers
+                and tmp in used_registers
+                and val["operand"] == "OR"
+                and f"{number:02}" not in val["result"]
+            )
+
+            if (
+                not carry_to_result
+                and not carry_to_tmp
+                and not out_carry
+                and not (
+                    val["left"] in used_registers
+                    and val["right"] in used_registers
+                    and val["operand"] == "XOR"
+                    and input_xor == val["result"]
+                )
+                and not (
+                    val["left"] in used_registers
+                    and val["right"] in used_registers
+                    and val["operand"] == "AND"
+                    and input_and == val["result"]
+                )
+            ):
+                # print("ERROR")
+                return val["result"]
+
+            # print(val)
+        return None
+
+    start = 1
+    while f"z{start:02}" in registers:
+        result = full_adder(instructions, start)
+        if result is not None:
+            print("fel", result)
+        start += 1
