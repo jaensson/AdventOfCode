@@ -7,8 +7,8 @@ def main():
     input_file = f"{os.path.dirname(os.path.realpath(__file__))}/input.txt"
     lines = read_file(input_file)
 
-    # part1_result = part1(lines)
-    # print(part1_result)
+    part1_result = part1(lines)
+    print(part1_result)
     part2_result = part2(lines)
     print(part2_result)
 
@@ -253,9 +253,6 @@ def part1(codes):
     directional_keypad = get_directional_keypad()
     test = build_directional_keypad(numeric_keypad, directional_keypad)
     test1 = build_my_directional(test, directional_keypad)
-
-    print(test["7", "A"])
-    print(test1["7", "A"])
 
     result = 0
     for code in codes:
