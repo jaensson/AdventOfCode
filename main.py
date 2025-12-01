@@ -1,15 +1,21 @@
-import sys
+import argparse
 from template.main import main as template
 from day_1.main import main as day1
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--day", help="day to execute")
+args = parser.parse_args()
+
 
 def main(day: int):
-    if day == "0":
-        template()
-    elif day == "1":
-        day1()
+    days = {
+        "0": template,
+        "1": day1,
+    }
+
+    days[day]()
 
 
 if __name__ == "__main__":
-    day = sys.argv[1]
-    main(day)
+    if args.day:
+        main(args.day)
