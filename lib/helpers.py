@@ -12,3 +12,10 @@ def read_file(file: str) -> List[str]:
     file.close()
 
     return lines
+
+def read_file_without_strip(file: str) -> List[str]:
+    file = open(file, File.READ.value, encoding="UTF-8")
+    lines = [line.rstrip("\n") for line in file.readlines()]
+    file.close()
+
+    return lines
