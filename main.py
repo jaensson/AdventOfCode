@@ -6,6 +6,7 @@ from day_3.main import main as day3
 from day_4.main import main as day4
 from day_5.main import main as day5
 from day_6.main import main as day6
+from day_7.main import main as day7
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--day", help="day to execute")
@@ -21,6 +22,7 @@ def main(day: int):
         "4": day4,
         "5": day5,
         "6": day6,
+        "7": day7,
     }
 
     days[day]()
