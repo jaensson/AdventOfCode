@@ -1,5 +1,6 @@
 import os
 from lib.helpers import read_file
+from enum import IntEnum
 
 
 def main():
@@ -28,113 +29,94 @@ def part1(tiles):
     for i in range(len(tiles)):
         for j in range(i + 1, len(tiles)):
             first, second = tiles[i], tiles[j]
-
-            area = abs(first[0] - second[0] + 1) * abs(
-                first[1] - second[1] + 1
-            )
+            area = (abs(first[0] - second[0]) + 1) * (abs(first[1] - second[1]) + 1)
             max_area = max(max_area, area)
 
     return max_area
 
 
 def part2(tiles):
-    min_x, _ = min(tiles, key=lambda tile: tile[0])
-    _, min_y = min(tiles, key=lambda tile: tile[1])
-    max_x, _ = max(tiles, key=lambda tile: tile[0])
-    _, max_y = max(tiles, key=lambda tile: tile[1])
+    class Direction(IntEnum):
+        LEFT = 1
+        RIGHT = 2
+        DOWN = 3
+        UP = 4
+
+    def direction(first, second):
+        if first[0] < second[0]:
+            return Direction.RIGHT
+        if first[0] > second[0]:
+            return Direction.LEFT
+        if first[1] < second[1]:
+            return Direction.DOWN
+        if first[1] > second[1]:
+            return Direction.UP
+
+    def ascending(first, second):
+        return (first, second) if first < second else (second, first)
+
+    def is_inside(rectangles, corner):
+        for first, second in rectangles:
+            min_x, max_x = ascending(first[0], second[0])
+            min_y, max_y = ascending(first[1], second[1])
+
+            if min_x <= corner[0] <= max_x and min_y <= corner[1] <= max_y:
+                return True
+
+        return False
 
     red_tiles = set(tiles)
-
+    valid_rectangles = set()
     tiles.append(tiles[0])
+    tiles.append(tiles[1])
     for i in range(len(tiles) - 2):
         first, middle, second = tiles[i], tiles[i + 1], tiles[i + 2]
 
-        is_right = first[0] < second[0]
-        is_down = first[1] < second[1]
+        min_x, max_x = ascending(first[0], second[0])
+        min_y, max_y = ascending(first[1], second[1])
 
-        """
-            paints green as walking
-            up/left = NO
-            up/right = YES
-            down/left = YES
-            down/right = NO
+        first_step = direction(first, middle)
+        second_step = direction(middle, second)
 
-            left/up = YES
-            left/down = NO
-            right/up = NO
-            right/down = YES
-        """
-
-        is_part_of_figure = (not is_right and is_down) or (
-            is_right and not is_down or ()
+        is_part_of_figure = (
+            (first_step == Direction.UP and second_step == Direction.RIGHT)
+            or (first_step == Direction.DOWN and second_step == Direction.LEFT)
+            or (first_step == Direction.LEFT and second_step == Direction.UP)
+            or (first_step == Direction.RIGHT and second_step == Direction.DOWN)
         )
-        print(first, second, is_part_of_figure)
-
-        # for j in range(i + 1, len(tiles), 2):
-        #     first, second = tiles[i], tiles[j]
-
-        #     is_part_of_figure = first[0]
-
-    # red_green_tiles = red_tiles.union(green_tiles)
-    # max_area = 0
-    # for i in range(len(tiles)):
-    #     for j in range(i + 1, len(tiles)):
-    #         first, second = tiles[i], tiles[j]
-
-    #         third, fourth = (first[0], second[1]), (second[0], first[1])
-
-    #         if third not in red_green_tiles and fourth not in red_green_tiles:
-    #             continue
-
-    #         area = abs(first[0] - second[0] + 1) * abs(
-    #             first[1] - second[1] + 1
-    #         )
-    #         if third in red_green_tiles and fourth in red_green_tiles:
-    #             max_area = max(max_area, area)
-    #         elif third in red_green_tiles:
-    #             max_area = max(max_area, area)
-    #         elif fourth in red_green_tiles:
-    #             max_area = max(max_area, area)
-    #         else:
-    #             print("här ska vi inte vara")
-
-    #         # print(first, second, third, fourth)
-
-    #         # area = abs(first[0] - second[0] + 1) * abs(
-    #         #     first[1] - second[1] + 1
-    #         # )
-    #         # max_area = max(max_area, area)
-    #     # break
-
-    return 0
-
-
-"""
-
-red_tiles = set(tiles)
-
-max_area = 0
-for i in range(len(tiles)):
-    for j in range(i + 1, len(tiles)):
-        first, second = tiles[i], tiles[j]
-
-        min_x, max_x = sorted([first[0], second[0]])
-        min_y, max_y = sorted([first[1], second[1]])
+        if not is_part_of_figure:
+            continue
 
         is_rectangle = True
         for x, y in red_tiles:
             if min_x < x < max_x and min_y < y < max_y:
                 is_rectangle = False
 
-        if is_rectangle:
-            area = abs(first[0] - second[0] + 1) * abs(
-                first[1] - second[1] + 1
-            )
-            print(first, second)
-            max_area = max(max_area, area)
+        if not is_rectangle:
+            continue
 
-        # print(first, second, (min_x, min_y), (max_x, max_y))
+        valid_rectangles.add((first, second))
 
-return max_area
+    max_area = 0
+    for i in range(len(tiles)):
+        for j in range(i + 1, len(tiles)):
+            first, second = tiles[i], tiles[j]
 
-"""
+            min_x, max_x = ascending(first[0], second[0])
+            min_y, max_y = ascending(first[1], second[1])
+
+            is_rectangle = True
+            for x, y in red_tiles:
+                if min_x < x < max_x and min_y < y < max_y:
+                    is_rectangle = False
+            if not is_rectangle:
+                continue
+
+            third, fourth = (first[0], second[1]), (second[0], first[1])
+            if is_inside(valid_rectangles, third) and is_inside(
+                valid_rectangles, fourth
+            ):
+                area = (abs(first[0] - second[0]) + 1) * (abs(first[1] - second[1]) + 1)
+                max_area = max(max_area, area)
+
+    return max_area
