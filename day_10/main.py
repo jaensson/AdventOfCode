@@ -69,3 +69,50 @@ def part1(machines):
 
     return number_of_presses
 
+
+def part2(machines):
+    def get_permutations(limits, buttons, target_value, current_index=0):
+        if current_index >= len(buttons):
+            return []
+        print(limits, buttons, target_value, current_index)
+
+        permutations = []
+        for i in range(limits[buttons[current_index]]):
+            if i == target_value:
+                permutations.append(i)
+            for t in get_permutations(
+                limits, buttons, target_value - i, current_index + 1
+            ):
+                print(t)
+
+        return permutations
+
+    print("part 2 \n\n")
+    for machine in machines[:1]:
+        goal = machine["joltage"]
+
+        limits = []
+        for button in machine["buttons"]:
+            limit = min([goal[light] for light in button])
+            limits.append(limit)
+
+        affected_by = []
+        for i in range(len(goal)):
+            row = []
+            for ix, button in enumerate(machine["buttons"]):
+                if i in button:
+                    row.append(ix)
+            affected_by.append(row)
+
+        # test = [-1 for i in range(len(goal))]
+        # print(test)
+
+        # for ix, row in enumerate(affected_by):
+        print(
+            f"permutations for row: {0}, {get_permutations(limits, affected_by[0], 10)}"
+        )
+
+        # print(affected_by)
+        # print(limits)
+
+        # print()
