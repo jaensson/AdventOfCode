@@ -25,12 +25,29 @@ def parse_input(lines):
     return tiles
 
 
+def print_grid(tiles):
+    min_x = min(tiles, key=lambda tile: tile[0])[0]
+    max_x = max(tiles, key=lambda tile: tile[0])[0]
+    min_y = min(tiles, key=lambda tile: tile[1])[1]
+    max_y = max(tiles, key=lambda tile: tile[1])[1]
+
+    for y in range(min_y - 1, max_y + 2):
+        for x in range(min_x - 1, max_x + 2):
+            if (x, y) in tiles:
+                print("#", end="")
+            else:
+                print(".", end="")
+        print()
+
+
 def part1(tiles):
     max_area = 0
     for i in range(len(tiles)):
         for j in range(i + 1, len(tiles)):
             first, second = tiles[i], tiles[j]
-            area = (abs(first[0] - second[0]) + 1) * (abs(first[1] - second[1]) + 1)
+            area = (abs(first[0] - second[0]) + 1) * (
+                abs(first[1] - second[1]) + 1
+            )
             max_area = max(max_area, area)
 
     return max_area
@@ -74,9 +91,40 @@ class Corner(IntEnum):
 
 
 def part2(tiles):
+    def ascending(first, second):
+        if second < first:
+            return second, first
+        return first, second
+
+    def has_wall_inside(walls, first, second):
+        min_x, max_x = ascending(first[0], second[0])
+        min_y, max_y = ascending(first[1], second[1])
+
+        for wall in walls:
+            x, y = wall
+            if (
+                not x[1] <= min_x
+                and not x[0] >= max_x
+                and not y[1] <= min_y
+                and not y[0] >= max_y
+            ):
+                return True
+        return False
+
+    def has_tile_inside(tiles, first, second):
+        min_x, max_x = ascending(first[0], second[0])
+        min_y, max_y = ascending(first[1], second[1])
+
+        for x, y in tiles:
+            if min_x < x < max_x and min_y < y < max_y:
+                return True
+
+        return False
+
     number_of_tiles = len(tiles)
 
     corners = []
+    walls = []
     for i in range(number_of_tiles):
         prev, current, next = (
             tiles[(i - 1) % number_of_tiles],
@@ -92,29 +140,62 @@ def part2(tiles):
         #     prev, current, next, prev_direction.name, next_direction.name, corner.name
         # )
 
+        min_x, max_x = ascending(current[0], next[0])
+        min_y, max_y = ascending(current[1], next[1])
+        walls.append(((min_x, max_x), (min_y, max_y)))
+
     # print(len(corners))
+
+    # has_wall_inside(walls, (7, 1), (9, 5))
+    # has_wall_inside(walls, (11, 7), (7, 3))
+    # has_wall_inside(walls, (11, 7), (2, 3))
 
     valid_corner = {
         Corner.TOP_LEFT: (
-            lambda first, second: first[0] <= second[0] and first[1] <= second[1]
+            lambda first, second: first[0] <= second[0]
+            and first[1] <= second[1]
         ),
         Corner.TOP_RIGHT: (
-            lambda first, second: first[0] >= second[0] and first[1] <= second[1]
+            lambda first, second: first[0] >= second[0]
+            and first[1] <= second[1]
         ),
         Corner.BOTTOM_RIGHT: (
-            lambda first, second: first[0] >= second[0] and first[1] >= second[1]
+            lambda first, second: first[0] >= second[0]
+            and first[1] >= second[1]
         ),
         Corner.BOTTOM_LEFT: (
-            lambda first, second: first[0] <= second[0] and first[1] >= second[1]
+            lambda first, second: first[0] <= second[0]
+            and first[1] >= second[1]
         ),
     }
+    valid_rectangles = set()
     for corner in corners:
         position, type = corner
 
-        possible_rectangles = []
         for second_corner in corners:
-            if corner == second_corner:
+            if (
+                corner == second_corner
+                or not valid_corner[type](position, second_corner[0])
+                or has_tile_inside(tiles, position, second_corner[0])
+                or has_wall_inside(walls, position, second_corner[0])
+            ):
                 continue
-            if valid_corner[type](position, second_corner[0]):
-                possible_rectangles.append(second_corner[0])
-        print(position, type.name, possible_rectangles)
+
+            if (position, second_corner[0]) in valid_rectangles or (
+                second_corner[0],
+                position,
+            ) in valid_rectangles:
+                continue
+            valid_rectangles.add((position, second_corner[0]))
+
+    max_area = 0
+    for rectangle in valid_rectangles:
+        first, second = rectangle
+
+        min_x, max_x = ascending(first[0], second[0])
+        min_y, max_y = ascending(first[1], second[1])
+
+        area = (max_x - min_x + 1) * (max_y - min_y + 1)
+        max_area = max(max_area, area)
+
+    return max_area
