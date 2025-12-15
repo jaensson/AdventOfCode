@@ -19,9 +19,8 @@ def parse_input(lines):
     def parse_presents(lines, number_of_presents, lines_per_present):
         presents = dict()
         for i in range(number_of_presents):
-            presents[i] = lines[
-                i * lines_per_present + 1 : (i + 1) * lines_per_present - 1
-            ]
+            present = lines[i * lines_per_present + 1 : (i + 1) * lines_per_present - 1]
+            presents[i] = (sum([row.count("#") for row in present]), present)
         return presents
 
     def parse_trees(lines):
@@ -52,7 +51,11 @@ def parse_input(lines):
 
 
 def part1(input):
-    pass
+    count = 0
+    for tree in input["trees"]:
+        if sum(tree["presents"]) <= (tree["width"] * tree["height"]) // 9:
+            count += 1
+    return count
 
 
 def part2(input):
