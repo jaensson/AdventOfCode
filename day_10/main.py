@@ -71,48 +71,79 @@ def part1(machines):
 
 
 def part2(machines):
-    def get_permutations(limits, buttons, target_value, current_index=0):
-        if current_index >= len(buttons):
-            return []
-        print(limits, buttons, target_value, current_index)
+    """
+    linear programming:
+        - simplex algorithm
 
-        permutations = []
-        for i in range(limits[buttons[current_index]]):
-            if i == target_value:
-                permutations.append(i)
-            for t in get_permutations(
-                limits, buttons, target_value - i, current_index + 1
-            ):
-                print(t)
 
-        return permutations
+    simplex algorithm ~
+    """
 
-    print("part 2 \n\n")
-    for machine in machines[:1]:
-        goal = machine["joltage"]
+    def times_row(multiplier, matrix, row):
+        print(multiplier, matrix, row)
 
-        limits = []
-        for button in machine["buttons"]:
-            limit = min([goal[light] for light in button])
-            limits.append(limit)
+        for ix, elem in enumerate(matrix[row]):
+            matrix[row][ix] = elem * multiplier
 
-        affected_by = []
-        for i in range(len(goal)):
-            row = []
-            for ix, button in enumerate(machine["buttons"]):
-                if i in button:
-                    row.append(ix)
-            affected_by.append(row)
+    def add_row(multiplier, matrix, row_from, row_to):
+        for ix, elem in enumerate(matrix[row_to]):
+            matrix[row_to][ix] = elem + matrix[row_from][ix] * multiplier
 
-        # test = [-1 for i in range(len(goal))]
-        # print(test)
+    matrix = [
+        [1, 3, 2, 1, 0, 0, 10],
+        [1, 5, 1, 0, 1, 0, 8],
+        [-8, -10, -7, 0, 0, 1, 0],
+    ]
 
-        # for ix, row in enumerate(affected_by):
-        print(
-            f"permutations for row: {0}, {get_permutations(limits, affected_by[0], 10)}"
-        )
+    times_row(1 / 5, matrix, 1)
+    add_row(-3, matrix, 1, 0)
+    add_row(10, matrix, 1, 2)
 
-        # print(affected_by)
-        # print(limits)
+    for row in matrix:
+        print(row)
 
-        # print()
+    # def get_permutations(limits, buttons, target_value, current_index=0):
+    #     if current_index >= len(buttons):
+    #         return []
+    #     print(limits, buttons, target_value, current_index)
+
+    #     permutations = []
+    #     for i in range(limits[buttons[current_index]]):
+    #         if i == target_value:
+    #             permutations.append(i)
+    #         for t in get_permutations(
+    #             limits, buttons, target_value - i, current_index + 1
+    #         ):
+    #             print(t)
+
+    #     return permutations
+
+    # print("part 2 \n\n")
+    # for machine in machines[:1]:
+    #     goal = machine["joltage"]
+
+    #     limits = []
+    #     for button in machine["buttons"]:
+    #         limit = min([goal[light] for light in button])
+    #         limits.append(limit)
+
+    #     affected_by = []
+    #     for i in range(len(goal)):
+    #         row = []
+    #         for ix, button in enumerate(machine["buttons"]):
+    #             if i in button:
+    #                 row.append(ix)
+    #         affected_by.append(row)
+
+    #     # test = [-1 for i in range(len(goal))]
+    #     # print(test)
+
+    #     # for ix, row in enumerate(affected_by):
+    #     print(
+    #         f"permutations for row: {0}, {get_permutations(limits, affected_by[0], 10)}"
+    #     )
+
+    #     # print(affected_by)
+    #     # print(limits)
+
+    #     # print()
