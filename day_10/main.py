@@ -71,17 +71,31 @@ def part1(machines):
 
 
 def part2(machines):
-    """
-    linear programming:
-        - simplex algorithm
+    def is_optimal(matrix):
+        for ix, elem in enumerate(matrix[len(matrix) - 1]):
+            if elem < 0:
+                return False
+        return True
 
+    def find_pivot(matrix):
+        objective = matrix[len(matrix) - 1]
+        current_smallest = 0
+        for i in range(1, len(objective) - 1):
+            if objective[i] < objective[current_smallest]:
+                current_smallest = i
+        x = current_smallest
 
-    simplex algorithm ~
-    """
+        constraints = [i for i in range(len(matrix) - 1) if matrix[i][x] > 0]
+        current_smallest = constraints[0]
+        for i in range(1, len(constraints)):
+            ratio = matrix[i][-1] / matrix[i][x]
+            if ratio < matrix[current_smallest][-1] / matrix[current_smallest][x]:
+                current_smallest = i
+        y = current_smallest
+
+        return x, y
 
     def times_row(multiplier, matrix, row):
-        print(multiplier, matrix, row)
-
         for ix, elem in enumerate(matrix[row]):
             matrix[row][ix] = elem * multiplier
 
@@ -95,12 +109,21 @@ def part2(machines):
         [-8, -10, -7, 0, 0, 1, 0],
     ]
 
-    times_row(1 / 5, matrix, 1)
-    add_row(-3, matrix, 1, 0)
-    add_row(10, matrix, 1, 2)
+    while not is_optimal(matrix):
+        x, y = find_pivot(matrix)
+        print((x, y))
+        multiplier = matrix[y][x] ** -1
+        times_row(multiplier, matrix, y)
+        for i in range(len(matrix)):
+            if i != y:
+                times = -(matrix[i][x]) / matrix[y][x]
+                add_row(times, matrix, y, i)
 
-    for row in matrix:
-        print(row)
+        for row in matrix:
+            print(row)
+
+    maximum_value = matrix[-1][-1]
+    print(maximum_value)
 
     # def get_permutations(limits, buttons, target_value, current_index=0):
     #     if current_index >= len(buttons):
