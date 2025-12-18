@@ -88,8 +88,11 @@ def part2(machines):
         constraints = [i for i in range(len(matrix) - 1) if matrix[i][x] > 0]
         current_smallest = constraints[0]
         for i in range(1, len(constraints)):
-            ratio = matrix[i][-1] / matrix[i][x]
-            if ratio < matrix[current_smallest][-1] / matrix[current_smallest][x]:
+            ratio = matrix[constraints[i]][-1] / matrix[constraints[i]][x]
+            if (
+                ratio
+                < matrix[current_smallest][-1] / matrix[current_smallest][x]
+            ):
                 current_smallest = i
         y = current_smallest
 
@@ -109,21 +112,87 @@ def part2(machines):
         [-8, -10, -7, 0, 0, 1, 0],
     ]
 
-    while not is_optimal(matrix):
-        x, y = find_pivot(matrix)
-        print((x, y))
-        multiplier = matrix[y][x] ** -1
-        times_row(multiplier, matrix, y)
-        for i in range(len(matrix)):
-            if i != y:
-                times = -(matrix[i][x]) / matrix[y][x]
-                add_row(times, matrix, y, i)
+    matrix = [
+        [3, 5, 1, 0, 0, 29],
+        [2, 1, 0, 1, 0, 10],
+        [-2, -3, 0, 0, 1, 0],
+    ]
+
+    matrix = [
+        [1, 1, 1, 1, 1, 0, 1],
+        [1, 0, 0, 1, 1, 0, 1],
+        [1, 1, 1, 0, 1, 1, 1],
+        [0, 1, 1, 0, 0, 0, 1],
+        [-10, -11, -11, -5, -10, -5, 0],
+    ]
+
+    matrix = [
+        [1, -1, 1, -1, 1, -1, 0, 0, 1, 0, 0, 0, 1],
+        [1, -1, 0, 0, 1, -1, 0, 0, 0, 1, 0, 0, 1],
+        [1, -1, 1, -1, 0, 0, 1, -1, 0, 0, 1, 0, 1],
+        [0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        [-10, 10, -11, 11, -5, 5, -5, 5, 0, 0, 0, 0, 0],
+    ]
+
+    # matrix = [
+    #     [0, 0, 0, 1, 1],
+    #     [0, 1, 0, 1, 1],
+    #     [0, 0, 1, 0, 1],
+    #     [0, 0, 1, 1, 1],
+    #     [1, 0, 1, 0, 1],
+    #     [1, 1, 0, 0, 1],
+    #     [-3, -5, -4, -7, 0],
+    # ]
+    # while not is_optimal(matrix):
+    #     x, y = find_pivot(matrix)
+    #     print((x, y))
+    #     multiplier = matrix[y][x] ** -1
+    #     times_row(multiplier, matrix, y)
+    #     for i in range(len(matrix)):
+    #         if i != y:
+    #             times = -(matrix[i][x]) / matrix[y][x]
+    #             add_row(times, matrix, y, i)
+
+    #     for row in matrix:
+    #         print(row)
+
+    # maximum_value = matrix[-1][-1]
+    # print(maximum_value)
+
+    for machine in machines[:1]:
+        print(machine)
+        goal = machine["joltage"]
+
+        matrix = []
+        for i in range(len(goal)):
+            row = []
+            for ix, button in enumerate(machine["buttons"]):
+                if i in button:
+                    row.append(1)
+                else:
+                    row.append(0)
+            row.append(goal[i])
+            opposite = [-elem for ix, elem in enumerate(row)]
+            matrix.append(row)
+            matrix.append(opposite)
 
         for row in matrix:
             print(row)
 
-    maximum_value = matrix[-1][-1]
-    print(maximum_value)
+        # print(affected_by)
+
+    """
+    [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
+
+    a + b + c = 10
+    a + c + d = 11
+    a + c + d = 11
+    a + b     = 5
+    a + b + c = 10
+    c         = 5
+
+    5a + 3b + 3c + 2d = 52
+    """
 
     # def get_permutations(limits, buttons, target_value, current_index=0):
     #     if current_index >= len(buttons):
