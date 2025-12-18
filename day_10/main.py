@@ -93,7 +93,7 @@ def part2(machines):
                 ratio
                 < matrix[current_smallest][-1] / matrix[current_smallest][x]
             ):
-                current_smallest = i
+                current_smallest = constraints[i]
         y = current_smallest
 
         return x, y
@@ -105,6 +105,12 @@ def part2(machines):
     def add_row(multiplier, matrix, row_from, row_to):
         for ix, elem in enumerate(matrix[row_to]):
             matrix[row_to][ix] = elem + matrix[row_from][ix] * multiplier
+
+    def transpose(matrix):
+        return [
+            [matrix[j][i] for j in range(len(matrix))]
+            for i in range(len(matrix[0]))
+        ]
 
     matrix = [
         [1, 3, 2, 1, 0, 0, 10],
@@ -134,108 +140,47 @@ def part2(machines):
         [-10, 10, -11, 11, -5, 5, -5, 5, 0, 0, 0, 0, 0],
     ]
 
-    # matrix = [
-    #     [0, 0, 0, 1, 1],
-    #     [0, 1, 0, 1, 1],
-    #     [0, 0, 1, 0, 1],
-    #     [0, 0, 1, 1, 1],
-    #     [1, 0, 1, 0, 1],
-    #     [1, 1, 0, 0, 1],
-    #     [-3, -5, -4, -7, 0],
-    # ]
-    # while not is_optimal(matrix):
-    #     x, y = find_pivot(matrix)
-    #     print((x, y))
-    #     multiplier = matrix[y][x] ** -1
-    #     times_row(multiplier, matrix, y)
-    #     for i in range(len(matrix)):
-    #         if i != y:
-    #             times = -(matrix[i][x]) / matrix[y][x]
-    #             add_row(times, matrix, y, i)
-
-    #     for row in matrix:
-    #         print(row)
-
-    # maximum_value = matrix[-1][-1]
-    # print(maximum_value)
-
-    for machine in machines[:1]:
-        print(machine)
+    result = 0
+    for machine in machines:
+        # print(machine)
         goal = machine["joltage"]
 
         matrix = []
         for i in range(len(goal)):
-            row = []
-            for ix, button in enumerate(machine["buttons"]):
-                if i in button:
-                    row.append(1)
-                else:
-                    row.append(0)
+            row = [
+                1 if i in button else 0
+                for ix, button in enumerate(machine["buttons"])
+            ]
             row.append(goal[i])
             opposite = [-elem for ix, elem in enumerate(row)]
             matrix.append(row)
             matrix.append(opposite)
 
-        for row in matrix:
-            print(row)
+        matrix.append([1] * len(machine["buttons"]) + [0])
+        matrix = transpose(matrix)
 
-        # print(affected_by)
+        for y, row in enumerate(matrix[:-1]):
+            slacks = [
+                1 if i == y else 0 for i in range(len(machine["buttons"]))
+            ]
+            matrix[y][-1:-1] = slacks
+        matrix[len(matrix) - 1][-1:-1] = [0] * len(machine["buttons"])
+        times_row(-1, matrix, len(matrix) - 1)
 
-    """
-    [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
+        while not is_optimal(matrix):
+            x, y = find_pivot(matrix)
+            # print((x, y))
+            multiplier = matrix[y][x] ** -1
+            times_row(multiplier, matrix, y)
+            for i in range(len(matrix)):
+                if i != y:
+                    times = -(matrix[i][x]) / matrix[y][x]
+                    add_row(times, matrix, y, i)
 
-    a + b + c = 10
-    a + c + d = 11
-    a + c + d = 11
-    a + b     = 5
-    a + b + c = 10
-    c         = 5
+            # for row in matrix:
+            #     print(row)
 
-    5a + 3b + 3c + 2d = 52
-    """
+        result += matrix[-1][-1]
+        # print(matrix[-1][-1])
 
-    # def get_permutations(limits, buttons, target_value, current_index=0):
-    #     if current_index >= len(buttons):
-    #         return []
-    #     print(limits, buttons, target_value, current_index)
-
-    #     permutations = []
-    #     for i in range(limits[buttons[current_index]]):
-    #         if i == target_value:
-    #             permutations.append(i)
-    #         for t in get_permutations(
-    #             limits, buttons, target_value - i, current_index + 1
-    #         ):
-    #             print(t)
-
-    #     return permutations
-
-    # print("part 2 \n\n")
-    # for machine in machines[:1]:
-    #     goal = machine["joltage"]
-
-    #     limits = []
-    #     for button in machine["buttons"]:
-    #         limit = min([goal[light] for light in button])
-    #         limits.append(limit)
-
-    #     affected_by = []
-    #     for i in range(len(goal)):
-    #         row = []
-    #         for ix, button in enumerate(machine["buttons"]):
-    #             if i in button:
-    #                 row.append(ix)
-    #         affected_by.append(row)
-
-    #     # test = [-1 for i in range(len(goal))]
-    #     # print(test)
-
-    #     # for ix, row in enumerate(affected_by):
-    #     print(
-    #         f"permutations for row: {0}, {get_permutations(limits, affected_by[0], 10)}"
-    #     )
-
-    #     # print(affected_by)
-    #     # print(limits)
-
-    #     # print()
+    return result
